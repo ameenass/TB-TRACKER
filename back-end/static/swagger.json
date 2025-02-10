@@ -1,136 +1,144 @@
 {
     "swagger": "2.0",
     "info": {
-      "title": "Patient Manager App API",
-      "description": "API pour gérer les patients, incluant l'ajout, la récupération et la recherche.",
-      "version": "1.0"
+      "title": "TB Tracker API",
+      "description": "API pour gérer les patients atteints de la tuberculose",
+      "version": "1.0.0"
     },
+    "host": "localhost:5000",
     "basePath": "/",
+    "schemes": [
+      "http"
+    ],
     "paths": {
-      "/add_patients": {
+      "/patients": {
         "post": {
           "summary": "Ajouter un patient",
-          "description": "Ajoute un patient à la base de données.",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
           "parameters": [
             {
-              "name": "patient",
               "in": "body",
+              "name": "patient",
+              "description": "Les informations du patient",
               "required": true,
               "schema": {
-                "$ref": "#/definitions/Patient"
+                "type": "object",
+                "properties": {
+                  "nom": { "type": "string" },
+                  "prenom": { "type": "string" },
+                  "ddn": { "type": "string" },
+                  "poids": { "type": "number" },
+                  "age": { "type": "integer" },
+                  "gender": { "type": "string" },
+                  "tlphn": { "type": "string" },
+                  "email": { "type": "string" },
+                  "adresse": { "type": "string" },
+                  "situationTB": { "type": "string" },
+                  "autreMaladie": { "type": "string" },
+                  "allergies": { "type": "string" }
+                }
               }
             }
           ],
           "responses": {
-            "201": {
+            "200": {
               "description": "Patient ajouté avec succès",
               "schema": {
                 "type": "object",
                 "properties": {
-                  "message": {
-                    "type": "string"
-                  },
-                  "patient_id": {
-                    "type": "string"
-                  }
+                  "id": { "type": "string" },
+                  "msg": { "type": "string" }
                 }
               }
-            },
-            "400": {
-              "description": "Données manquantes ou invalides"
-            },
-            "500": {
-              "description": "Erreur interne du serveur"
             }
           }
-        }
-      },
-      "/get_patients": {
+        },
         "get": {
           "summary": "Obtenir la liste des patients",
-          "description": "Retourne tous les patients enregistrés.",
-          "produces": ["application/json"],
           "responses": {
             "200": {
               "description": "Liste des patients",
               "schema": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/definitions/Patient"
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "nom": { "type": "string" },
+                    "prenom": { "type": "string" },
+                    "ddn": { "type": "string" },
+                    "poids": { "type": "number" },
+                    "age": { "type": "integer" },
+                    "gender": { "type": "string" },
+                    "tlphn": { "type": "string" },
+                    "email": { "type": "string" },
+                    "adresse": { "type": "string" },
+                    "situationTB": { "type": "string" },
+                    "autreMaladie": { "type": "string" },
+                    "allergies": { "type": "string" }
+                  }
                 }
               }
-            },
-            "500": {
-              "description": "Erreur interne du serveur"
             }
           }
         }
       },
-      "/search_by_name": {
+      "/patients/{id}": {
         "get": {
-          "summary": "Rechercher des patients par nom",
-          "description": "Recherche des patients dont le nom commence par une chaîne spécifique.",
-          "produces": ["application/json"],
+          "summary": "Obtenir un patient par ID",
           "parameters": [
             {
-              "name": "name",
-              "in": "query",
+              "name": "id",
+              "in": "path",
               "required": true,
-              "type": "string",
-              "description": "Premières lettres du nom à rechercher"
+              "type": "string"
             }
           ],
           "responses": {
             "200": {
-              "description": "Liste des patients correspondant à la recherche",
+              "description": "Un patient trouvé",
               "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/Patient"
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "nom": { "type": "string" },
+                  "prenom": { "type": "string" },
+                  "ddn": { "type": "string" },
+                  "poids": { "type": "number" },
+                  "age": { "type": "integer" },
+                  "gender": { "type": "string" },
+                  "tlphn": { "type": "string" },
+                  "email": { "type": "string" },
+                  "adresse": { "type": "string" },
+                  "situationTB": { "type": "string" },
+                  "autreMaladie": { "type": "string" },
+                  "allergies": { "type": "string" }
                 }
               }
-            },
-            "400": {
-              "description": "Nom non fourni ou invalide"
-            },
-            "500": {
-              "description": "Erreur interne du serveur"
+            }
+          }
+        },
+        "delete": {
+          "summary": "Supprimer un patient",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Patient supprimé avec succès",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "msg": { "type": "string" }
+                }
+              }
             }
           }
         }
-      }
-    },
-    "definitions": {
-      "Patient": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Jean Dupont"
-          },
-          "age": {
-            "type": "integer",
-            "example": 45
-          },
-          "gender": {
-            "type": "string",
-            "enum": ["male", "female", "other"],
-            "example": "male"
-          },
-          "date_of_birth": {
-            "type": "string",
-            "format": "date",
-            "example": "1978-05-22"
-          },
-          "weight": {
-            "type": "number",
-            "format": "float",
-            "example": 72.5
-          }
-        },
-        "required": ["name", "age", "gender", "date_of_birth", "weight"]
       }
     }
   }

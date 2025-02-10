@@ -1,0 +1,137 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "Patient Manager App API",
+      "description": "API pour gérer les patients, incluant l'ajout, la récupération et la recherche.",
+      "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+      "/add_patients": {
+        "post": {
+          "summary": "Ajouter un patient",
+          "description": "Ajoute un patient à la base de données.",
+          "consumes": ["application/json"],
+          "produces": ["application/json"],
+          "parameters": [
+            {
+              "name": "patient",
+              "in": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/Patient"
+              }
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "Patient ajouté avec succès",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  },
+                  "patient_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Données manquantes ou invalides"
+            },
+            "500": {
+              "description": "Erreur interne du serveur"
+            }
+          }
+        }
+      },
+      "/get_patients": {
+        "get": {
+          "summary": "Obtenir la liste des patients",
+          "description": "Retourne tous les patients enregistrés.",
+          "produces": ["application/json"],
+          "responses": {
+            "200": {
+              "description": "Liste des patients",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Patient"
+                }
+              }
+            },
+            "500": {
+              "description": "Erreur interne du serveur"
+            }
+          }
+        }
+      },
+      "/search_by_name": {
+        "get": {
+          "summary": "Rechercher des patients par nom",
+          "description": "Recherche des patients dont le nom commence par une chaîne spécifique.",
+          "produces": ["application/json"],
+          "parameters": [
+            {
+              "name": "name",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "Premières lettres du nom à rechercher"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Liste des patients correspondant à la recherche",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Patient"
+                }
+              }
+            },
+            "400": {
+              "description": "Nom non fourni ou invalide"
+            },
+            "500": {
+              "description": "Erreur interne du serveur"
+            }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "Patient": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Jean Dupont"
+          },
+          "age": {
+            "type": "integer",
+            "example": 45
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["male", "female", "other"],
+            "example": "male"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "example": "1978-05-22"
+          },
+          "weight": {
+            "type": "number",
+            "format": "float",
+            "example": 72.5
+          }
+        },
+        "required": ["name", "age", "gender", "date_of_birth", "weight"]
+      }
+    }
+  }
+  
