@@ -29,9 +29,9 @@ import React, { useState } from "react";
       };
     
       return (
-        <div className="max-w-8xl mx-auto p-6 bg-teal-50">
+        <div className="max-w-8xl mx-auto p-14 bg-teal-50">
             <div className='w-full text-center'>
-          <h2 className="text-2xl font-semibold mb-4 items-center">Enregistrer patient</h2>
+          <h2 className="text-3xl text-teal-900 font-semibold mb-4 items-center">Ajouter patient</h2>
           </div>
           <form onSubmit={handleSubmit}>
             {/* nom prenom side by side */}
