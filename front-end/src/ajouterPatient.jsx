@@ -13,8 +13,6 @@ import React, { useState } from "react";
           setWeight(e.target.value); // Update weight when slider changes
         };
       
-      
-    
       const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevState) => ({
@@ -29,14 +27,14 @@ import React, { useState } from "react";
       };
     
       return (
-        <div className="max-w-8xl mx-auto p-14 bg-teal-50">
+        <div className="max-w-8xl mx-auto p-16 bg-teal-50">
             <div className='w-full text-center'>
-          <h2 className="text-3xl text-teal-900 font-semibold mb-4 items-center">Ajouter patient</h2>
+          <h2 className="text-3xl font-semibold mb-9 mt-0 items-center text-teal-900">Ajouter patient</h2>
           </div>
           <form onSubmit={handleSubmit}>
             {/* nom prenom side by side */}
             <div className="flex mb-4">
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pr-4">
                 <label htmlFor="nom" className=" relative block font-semibold text-gray-700">    
                 <input
                   id="nom"
@@ -44,12 +42,12 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.nom}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 border-opacity-50 bg-teal-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 border-opacity-50 bg- rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200 bg-teal-50 text-black"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Nom</span>
                  </label>
               </div>
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pl-4">
                 <label htmlFor="prenom" className=" relative block font-semibold text-gray-700">
                 <input
                   id="prenom"
@@ -57,7 +55,7 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.prenom}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 border-opacity-50 bg-teal-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full  text-black  px-4 py-2 border-2 border-opacity-50 bg-teal-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Prenom</span>
                  </label>
@@ -65,7 +63,7 @@ import React, { useState } from "react";
             </div>
             {/* Age ddt by side */} 
             <div className="flex mb-4">
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pr-4">
                 <label htmlFor="age" className=" relative block font-semibold text-gray-700">
                 <input
                   id="age"
@@ -73,29 +71,29 @@ import React, { useState } from "react";
                   type="number"
                   value={formData.age}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2  text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-number ">Age</span>
                  </label>
               </div>
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pl-4">
                 <label htmlFor="ddn" className=" relative block font-semibold text-gray-700">
                 <input
                   id="ddn"
                   name="Date"
                   type="date"
-                  placeholder=""
+                  placeholder="Date de naissance"
                   value={formData.ddt}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 border-opacity-50  bg-teal-50 rounded-md outline-none focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 text-black  border-opacity-50  bg-teal-50 rounded-md outline-none focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
-               <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-date ">Date de naissance</span>
+               <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-date "></span>
                  </label>
               </div>
               </div>
                {/* poids sex by side */} 
             <div className="flex mb-4">
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pr-4">
               <div className="flex relative  items-center space-x-4">
         {/* Weight slider */}
         <input
@@ -104,13 +102,13 @@ import React, { useState } from "react";
           max="200"
           value={weight}
           onChange={handleSliderChange}
-          className=" w-full h-2  bg-teal-200 rounded-lg cursor-pointer"
+          className=" w-full h-2  bg-teal-200  text-black rounded-lg cursor-pointer"
         />
         {/* Weight display */}
         <span className=" ml-1 text-xl font-semibold">{weight}Kg</span>
       </div>
     </div>
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pl-4">
                 <label htmlFor="sex" className=" relative block font-semibold text-gray-700">
                 <select
                 id="sex"
@@ -128,7 +126,7 @@ import React, { useState } from "react";
             </div>
              {/* num by side*/}
             <div className="flex mb-4">
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pr-4">
                 <label htmlFor="num" className=" relative block font-semibold text-gray-700">
                 <input
                   id="num"
@@ -141,7 +139,7 @@ import React, { useState } from "react";
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">N_telephone</span>
                  </label>
               </div>
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pl-4">
                 <label htmlFor="numU" className=" relative block font-semibold text-gray-700">
                 <input
                   id="numU"
@@ -149,7 +147,7 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.numU}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Contact urgent</span>
                  </label>
@@ -157,20 +155,20 @@ import React, { useState } from "react";
 </div>
 {/* email */}
 <div className="flex mb-4">
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pr-4">
                 <label htmlFor="email" className=" relative block font-semibold text-gray-700">
                 <input
                   id="email"
-                  name="Email"
+                  name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 text-black bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-email ">Email</span>
                  </label>
               </div>
-              <div className="w-1/2 pr-2">
+              <div className="w-1/2 pl-4">
                 <label htmlFor="adress" className=" relative block font-semibold text-gray-700">
                 <input
                   id="adress"
@@ -178,7 +176,7 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.adress}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Adress</span>
                  </label>
@@ -194,12 +192,12 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.maladie}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2  text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Autre maladie</span>
                  </label>
               </div>
-              <div className="w-1/3 pr-2">
+              <div className="w-1/3 pl-4 pr-4 ">
                 <label htmlFor="poids" className=" relative block font-semibold text-gray-700">
                 <input
                   id="poids"
@@ -207,24 +205,24 @@ import React, { useState } from "react";
                   type="text"
                   value={formData.poids}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border-2 bg-teal-50  border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                  className="w-full px-4 py-2 border-2 text-black  bg-teal-50  border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                <span className="absolute left-0 top-2 mx-2 px-2 transition duration-200 input-text ">Allergie</span>
                  </label>
               </div>
-              <div className="w-1/3 pr-2">
+              <div className="w-1/3 pl-4">
                 <label htmlFor="situation" className=" relative block font-semibold text-gray-700">
                 <select
                 id="situation"
                 name="Situation"
                 value={formData.setuation}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border-2  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
+                className="w-full px-4 py-2 border-2 text-teal-800  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
               >
-                <option value=""> Situation</option>
-                <option value="Nouveau cas"></option>
-                <option value="Retraitement"></option>
-                <option value="TB-MR"></option>
+                <option value> Situation</option>
+                <option value="nouveau cas">Nouveau cas</option>
+                <option value="retraitement">Retraitement</option>
+                <option value="tb-mr">TB-MR</option>
                 </select>
               </label>
               </div>
@@ -232,16 +230,25 @@ import React, { useState } from "react";
 
 {/*jh*/}
 
- 
-            <div className="flex justify-end mt-6">
+ <div className="flex justify-end ">
+           
+            <div className="flex pr-2">
               <button
                 type="submit"
-                className="px-6 py-2 bg-teal-800 text-white rounded-md focus:outline-none"
+                className="px-6 py-2 font-semibold text-teal-800 bg-teal-50 rounded-md focus:outline-none border-2 border-teal-800"
               >
-                Enregitrer
+                Annuler
               </button>
             </div>
-       
+             <div className="flex pl-2 ">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-teal-800 font-semibold text-white rounded-md focus:outline-none"
+              >
+                Enregistrer
+              </button>
+            </div>
+</div>
           </form>
         </div>
       );
