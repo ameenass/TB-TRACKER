@@ -1,15 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-input[type="text"]:focus ~ .input-text{
-    @apply text-teal-800 bg-teal-50 transform -translate-y-5 -translate-x-0 scale-100;
-  }
-  input[type="date"]:focus ~ .input-date{
-    @apply text-teal-800 bg-teal-50 transform -translate-y-5 -translate-x-0 scale-100;
-  }
-  input[type="number"]:focus ~ .input-number{
-    @apply text-teal-800 bg-teal-50 transform -translate-y-5 -translate-x-0 scale-100;
-  }
-  input[type="email"]:focus ~ .input-email{
-    @apply text-teal-800 bg-teal-50 transform -translate-y-5 -translate-x-0 scale-100;
-  }
+@import "tailwindcss";

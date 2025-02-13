@@ -242,7 +242,7 @@ import React, { useState } from "react";
             </div>
              <div className="flex pl-2 ">
               <button
-                type="submit"
+                type="button"
                 className="px-6 py-2 bg-teal-800 font-semibold text-white rounded-md focus:outline-none"
               >
                 Enregistrer
