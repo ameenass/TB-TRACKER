@@ -34,8 +34,8 @@ const handleSubmit = (e) => {
   }
 
   // Phone number validation
-  const phoneRegex = /^[0-9]{8,15}$/; // Allows 8 to 15 digits
-  if (!phoneRegex.test(nume) || !phoneRegex.test(numU)) {
+  const phoneRegex = /^0(5|6|7)\d{8}$/;
+  if (!phoneRegex.test(nume)) {
     toast.error("Numéro de téléphone invalide");
     return;
   }
@@ -73,7 +73,7 @@ const handleSubmit = (e) => {
   }
 
   // All fields are valid ??
-  if (nom && email && prenom && age && maladie && allergie && nume && numU && adress) {
+  if (nom && email && prenom && age && nume && adress) {
     toast.success("Formulaire soumis avec succès!");
   } else {
     toast.error("Veuillez remplir tous les champs!");
