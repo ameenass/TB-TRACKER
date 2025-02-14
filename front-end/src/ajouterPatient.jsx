@@ -15,11 +15,11 @@ import 'react-toastify/dist/ReactToastify.css';
   const [situation, setSituation] = useState('');
   const [sex, setSex] = useState('');
   const [ddn, setDdn] = useState('');
-       const [weight, setWeight] = useState(50);
+       const [poids, setPoids] = useState(50);
       
 // Handle slider
 const handleSliderChange = (e) => {
-  setWeight(e.target.value);
+  setPoids(e.target.value);
 };
 
 //handle form submission
@@ -66,7 +66,7 @@ const handleSubmit = (e) => {
   }
 
   // Weight validation
-  const weightValue = parseInt(weight, 10);
+  const weightValue = parseInt(poids, 10);
   if (isNaN(weightValue) || weightValue < 1 || weightValue > 500) {
     toast.error("Veuillez entrer un poids valide");
     return;
@@ -163,12 +163,12 @@ Age
           min="30"
           max="200"
 
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
+          value={poids}
+          onChange={(e) => setPoids(e.target.value)}
           className=" w-full h-2  bg-teal-200  text-black rounded-lg cursor-pointer"
         />
         {/* weight display */}
-        <span className=" ml-1 text-xl font-semibold">{weight}Kg</span>
+        <span className=" ml-1 text-xl font-semibold">{poids}Kg</span>
       </div>
     </div>
               <div className="w-1/2 pl-4">
