@@ -9,12 +9,12 @@ import 'react-toastify/dist/ReactToastify.css';
   const [age, setAge] = useState('');
   const [maladie, setMaladie] = useState('');
   const [allergie, setAllergie] = useState('');
-  const [nume, setNume] = useState('');
-  const [numU, setNumU] = useState('');
+  const [tlphn, setTlphn] = useState('');
+  const [tlphnum, setTlphnum] = useState('');
   const [adress, setAdress] = useState('');
   const [situation, setSituation] = useState('');
   const [sex, setSex] = useState('');
-  const [ddt, setDdt] = useState('');
+  const [ddn, setDdn] = useState('');
        const [weight, setWeight] = useState(50);
       
 // Handle slider
@@ -35,7 +35,7 @@ const handleSubmit = (e) => {
 
   // Phone number validation
   const phoneRegex = /^0(5|6|7)\d{8}$/;
-  if (!phoneRegex.test(nume)) {
+  if (!phoneRegex.test(tlphn)) {
     toast.error("Numéro de téléphone invalide");
     return;
   }
@@ -60,7 +60,7 @@ const handleSubmit = (e) => {
   }
 
   // Date validation
-  if (!ddt) {
+  if (!ddn) {
     toast.error("Veuillez sélectionner une date de naissance");
     return;
   }
@@ -73,7 +73,8 @@ const handleSubmit = (e) => {
   }
 
   // All fields are valid ??
-  if (nom && email && prenom && age && nume && adress) {
+  if (nom && email && prenom && age && tlphn && adress && situation && sex && ddn) {
+
     toast.success("Formulaire soumis avec succès!");
   } else {
     toast.error("Veuillez remplir tous les champs!");
@@ -94,6 +95,7 @@ const handleSubmit = (e) => {
               <div className="w-1/2 pr-4">
                 <label className=" relative block font-semibold text-gray-700">    
                 <input
+                  id="nom"
                   value={nom}
                   name="nom"
                   type="text"
@@ -106,6 +108,7 @@ const handleSubmit = (e) => {
               <div className="w-1/2 pl-4">
                 <label  className=" relative block font-semibold text-gray-700">
                 <input
+                id="prenom"
             value={prenom}
                   name="prenom"
                   type="text"
@@ -123,6 +126,7 @@ const handleSubmit = (e) => {
               <div className="w-1/2 pr-4">
                 <label htmlFor="age" className=" relative block font-semibold text-gray-700">
                 <input
+                id="age"
                 value={age}
                   name="age"
                   type="number"
@@ -136,13 +140,14 @@ Age
               <div className="w-1/2 pl-4">
                 <label htmlFor="ddn" className=" relative block font-semibold text-gray-700">
                 <input
-                value={ddt}
-                  name="ddt"
+                value={ddn}
+                id="ddn"
+                  name="ddn"
                   type="date"
                   
                   placeholder="Date de naissance"
                   
-                  onChange={(e) => setDdt(e.target.value)}                  className="w-full px-4 py-2 border-2 text-black  border-opacity-50  bg-teal-50 rounded-md outline-none border-teal-800 focus:border-teal-800 focus:outline-none transition duration-200"
+                  onChange={(e) => setDdn(e.target.value)}                  className="w-full px-4 py-2 border-2 text-black  border-opacity-50  bg-teal-50 rounded-md outline-none border-teal-800 focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                Date de naissance              </label>
               </div>
@@ -153,6 +158,7 @@ Age
               <div className="flex relative  items-center space-x-4">
         {/* weight slider */}
         <input
+        id="poids"
           type="range"
           min="30"
           max="200"
@@ -170,6 +176,8 @@ Age
                 <select
                value={sex}
                 name="sex"
+                id="sex"
+                required
                 
                 
                 onChange={(e) => setSex(e.target.value)}
@@ -187,11 +195,12 @@ Age
               <div className="w-1/2 pr-4">
                 <label htmlFor="num" className=" relative block font-semibold text-gray-700">
                 <input
-                 value={nume}
-                  name="nume"
+                 value={tlphn}
+                  name="tlphn"
                   type="text"
+                  id="tlphn"
                   
-                  onChange={(e) => setNume(e.target.value)}
+                  onChange={(e) => setTlphn(e.target.value)}
                   className="w-full px-4 py-2 border-2 bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                Num_Telephone         </label>
@@ -199,11 +208,12 @@ Age
               <div className="w-1/2 pl-4">
                 <label htmlFor="numU" className=" relative block font-semibold text-gray-700">
                 <input
-                 value={numU}
-                  name="numU"
+                 value={tlphnum}
+                  name="tlphnum"
                   type="text"
+                  id="tlphnum"
                 
-                  onChange={(e) => setNumU(e.target.value)}
+                  onChange={(e) => setTlphnum(e.target.value)}
                   className="w-full px-4 py-2 border-2 text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
                 Numéro d'urgence
@@ -218,7 +228,7 @@ Age
                   name="email"
                 value={email}
                   type="email"
-                 
+                 id="email"
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full px-4 py-2 border-2 text-black bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
@@ -232,7 +242,7 @@ Age
                   name="adress"
               value={adress}
                   type="text"
-                 
+                 id="adresse"
                   onChange={(e) => setAdress(e.target.value)}
                   className="w-full px-4 py-2 border-2 text-black  bg-teal-50 border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
                 /> 
@@ -246,6 +256,7 @@ Age
                 <label htmlFor="maladie" className=" relative block font-semibold text-gray-700">
                 <input
                   name="maladie"
+                  id="autreMaladie"
                  value={maladie}
                   type="text"
                                     onChange={(e) => setMaladie(e.target.value)}
@@ -260,7 +271,7 @@ Age
                  value={allergie}
                   name="allergie"
                   type="text"
-                 
+                 id="allergie"
           
                   onChange={(e) => setAllergie(e.target.value)}
                   className="w-full px-4 py-2 border-2 text-black  bg-teal-50  border-opacity-50 rounded-md border-teal-800 outline-none  focus:border-teal-800 focus:outline-none transition duration-200"
@@ -273,7 +284,7 @@ Age
                 <div className="w-1/2">
                 <label htmlFor="situation" className=" relative block font-semibold text-gray-700">
                 <select
-               
+               id="situation"
                 name="situation"
                value={situation}
                 onChange={(e) => setSituation(e.target.value)}
