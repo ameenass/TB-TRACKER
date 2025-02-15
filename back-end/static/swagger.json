@@ -1,145 +1,171 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "title": "TB Tracker API",
-      "description": "API pour gérer les patients atteints de la tuberculose",
-      "version": "1.0.0"
-    },
-    "host": "localhost:5000",
-    "basePath": "/",
-    "schemes": [
-      "http"
-    ],
-    "paths": {
-      "/patients": {
-        "post": {
-          "summary": "Ajouter un patient",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "patient",
-              "description": "Les informations du patient",
-              "required": true,
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "nom": { "type": "string" },
-                  "prenom": { "type": "string" },
-                  "ddn": { "type": "string" },
-                  "poids": { "type": "number" },
-                  "age": { "type": "integer" },
-                  "gender": { "type": "string" },
-                  "tlphn": { "type": "string" },
-                  "email": { "type": "string" },
-                  "adresse": { "type": "string" },
-                  "situationTB": { "type": "string" },
-                  "autreMaladie": { "type": "string" },
-                  "allergies": { "type": "string" }
-                }
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Patient ajouté avec succès",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": { "type": "string" },
-                  "msg": { "type": "string" }
-                }
+  "swagger": "2.0",
+  "info": {
+    "title": "TB Tracker API",
+    "description": "API pour gérer les patients atteints de la tuberculose",
+    "version": "1.0.0"
+  },
+  "host": "localhost:5000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "securityDefinitions": {
+    "apiKeyAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "paths": {
+    "/patients": {
+      "post": {
+        "summary": "Ajouter un patient",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "patient",
+            "description": "Les informations du patient",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": { "type": "string" },
+                "prenom": { "type": "string" },
+                "ddn": { "type": "string", "format": "date" },
+                "poids": { "type": "number" },
+                "age": { "type": "integer" },
+                "sex": { "type": "string" },
+                "tlphn": { "type": "string" },
+                "email": { "type": "string", "format": "email" },
+                "adress": { "type": "string" },
+                "situation": { "type": "string" },
+                "maladie": { "type": "string" },
+                "allergie": { "type": "string" }
               }
             }
           }
-        },
-        "get": {
-          "summary": "Obtenir la liste des patients",
-          "responses": {
-            "200": {
-              "description": "Liste des patients",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "string" },
-                    "nom": { "type": "string" },
-                    "prenom": { "type": "string" },
-                    "ddn": { "type": "string" },
-                    "poids": { "type": "number" },
-                    "age": { "type": "integer" },
-                    "gender": { "type": "string" },
-                    "tlphn": { "type": "string" },
-                    "email": { "type": "string" },
-                    "adresse": { "type": "string" },
-                    "situationTB": { "type": "string" },
-                    "autreMaladie": { "type": "string" },
-                    "allergies": { "type": "string" }
-                  }
-                }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient ajouté avec succès",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "msg": { "type": "string" }
+              }
+            },
+            "examples": {
+              "application/json": {
+                "id": "12345",
+                "msg": "Patient ajouté avec succès"
               }
             }
+          },
+          "400": {
+            "description": "Requête invalide"
           }
         }
       },
-      "/patients/{id}": {
-        "get": {
-          "summary": "Obtenir un patient par ID",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Un patient trouvé",
-              "schema": {
+      "get": {
+        "summary": "Obtenir la liste des patients",
+        "responses": {
+          "200": {
+            "description": "Liste des patients",
+            "schema": {
+              "type": "array",
+              "items": {
                 "type": "object",
                 "properties": {
                   "id": { "type": "string" },
                   "nom": { "type": "string" },
                   "prenom": { "type": "string" },
-                  "ddn": { "type": "string" },
+                  "ddn": { "type": "string", "format": "date" },
                   "poids": { "type": "number" },
                   "age": { "type": "integer" },
-                  "gender": { "type": "string" },
+                  "sex": { "type": "string" },
                   "tlphn": { "type": "string" },
-                  "email": { "type": "string" },
-                  "adresse": { "type": "string" },
-                  "situationTB": { "type": "string" },
-                  "autreMaladie": { "type": "string" },
-                  "allergies": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "delete": {
-          "summary": "Supprimer un patient",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "type": "string"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Patient supprimé avec succès",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "msg": { "type": "string" }
+                  "email": { "type": "string", "format": "email" },
+                  "adress": { "type": "string" },
+                  "situation": { "type": "string" },
+                  "maladie": { "type": "string" },
+                  "allergie": { "type": "string" }
                 }
               }
             }
           }
         }
       }
+    },
+    "/patients/{id}": {
+      "get": {
+        "summary": "Obtenir un patient par ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Un patient trouvé",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "nom": { "type": "string" },
+                "prenom": { "type": "string" },
+                "ddn": { "type": "string", "format": "date" },
+                "poids": { "type": "number" },
+                "age": { "type": "integer" },
+                "sex": { "type": "string" },
+                "tlphn": { "type": "string" },
+                "email": { "type": "string", "format": "email" },
+                "adress": { "type": "string" },
+                "situation": { "type": "string" },
+                "maladie": { "type": "string" },
+                "allergie": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Patient non trouvé"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Supprimer un patient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient supprimé avec succès",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "msg": { "type": "string" }
+              }
+            },
+            "examples": {
+              "application/json": {
+                "msg": "Patient supprimé avec succès"
+              }
+            }
+          },
+          "404": {
+            "description": "Patient non trouvé"
+          }
+        }
+      }
     }
   }
-  
+}

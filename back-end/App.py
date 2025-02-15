@@ -6,23 +6,26 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Configuration MongoDB
-app.config["MONGO_URI"] = "mongodb+srv://aminarz910:MqDvtXezObFdIk8t@cluster0.ffgi2.mongodb.net/My_db?retryWrites=true&w=majority"
+
+app.config["MONGO_URI"] = "mongodb+srv://aminarz910:MqDvtXezObFdIk8t@cluster0.ffgi2.mongodb.net/tb-tracker?retryWrites=true&w=majority"
 #"mongodb+srv://amina:fAQDc0vBrK7CTmlP@cluster0.ffgi2.mongodb.net/TB-Tracker?retryWrites=true&w=majority" 
 mongo = PyMongo(app)
 
-# Activer CORS
 CORS(app)
-db = mongo.db.patients #accéder à la collection patients dans la base de données
+db = mongo.db.patients 
 
-# Configuration de Swagger
+#configuration de Swagger
 SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.json'  # Le fichier Swagger JSON
-swaggerui_blueprint = get_swaggerui_blueprint(SWAGGER_URL, API_URL, config={'app_name': "TB Tracker API"})
+API_URL = '/back-end/static/serine.json'  # Le fichier Swagger JSON
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL, API_URL, config={'app_name': "TB Tracker API"})
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
-# Ajouter un patient
-@app.route('/patients', methods=['POST'])
+@app.route('/')
+def home():
+    return 'Bienvenue sur la page de TB Tracker!'
+
+@app.route('/add_patients', methods=['POST'])
 def add_patients():
     try:
         result = db.insert_one({
@@ -31,20 +34,20 @@ def add_patients():
             "ddn": request.json['ddn'],
             "poids": request.json['poids'],
             "age": request.json['age'],
-            "gender": request.json['gender'],
+            "sex": request.json['sex'],
             "tlphn": request.json['tlphn'],
             "email": request.json['email'],
-            "adresse": request.json['adresse'],
-            "situationTB": request.json['situationTB'],
-            "autreMaladie": request.json['autreMaladie'],
-            "allergies": request.json['allergies']
+            "adress": request.json['adress'],
+            "situation": request.json['situation'],
+            "maladie": request.json['maladie'],
+            "allergie": request.json['allergie']
         })
         return jsonify({'id': str(result.inserted_id), 'msg': "Patient ajouté avec succès!"})
                                #contient l'id du patient ajouté
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/patients', methods=['GET'])
+@app.route('/get_patients', methods=['GET'])
 def get_patients():
     patients = []
     for doc in db.find():
@@ -55,13 +58,13 @@ def get_patients():
             'ddn': doc['ddn'],
             'poids': doc['poids'],
             'age': doc['age'],
-            'gender': doc['gender'],
+            'sex': doc['sex'],
             'tlphn': doc['tlphn'],
             'email': doc['email'],
-            'adresse': doc['adresse'],
-            'situationTB': doc['situationTB'],
-            'autreMaladie': doc['autreMaladie'],
-            'allergies': doc['allergies']
+            'adress': doc['adress'],
+            'situation': doc['situation'],
+            'maladie': doc['maladie'],
+            'allergie': doc['allergie']
         })
     return jsonify(patients)
 
