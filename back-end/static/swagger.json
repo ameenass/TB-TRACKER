@@ -7,16 +7,7 @@
   },
   "host": "localhost:5000",
   "basePath": "/",
-  "schemes": [
-    "http"
-  ],
-  "securityDefinitions": {
-    "apiKeyAuth": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
-    }
-  },
+  "schemes": ["http"],
   "paths": {
     "/patients": {
       "post": {
@@ -30,106 +21,112 @@
             "schema": {
               "type": "object",
               "properties": {
+                "IDPatient": { "type": "integer" },
                 "nom": { "type": "string" },
                 "prenom": { "type": "string" },
-                "ddn": { "type": "string", "format": "date" },
-                "poids": { "type": "number" },
-                "age": { "type": "integer" },
-                "sex": { "type": "string" },
-                "tlphn": { "type": "string" },
                 "email": { "type": "string", "format": "email" },
-                "adress": { "type": "string" },
-                "situation": { "type": "string" },
-                "maladie": { "type": "string" },
-                "allergie": { "type": "string" }
-              }
+                "age" :{"type":"integer"},
+                "adresse": { "type": "string" },
+                "numero": { "type": "string" },
+                "sexe": { "type": "string" },
+                "DateNaissance": { "type": "string", "format": "date" },
+                "poidsInitial": { "type": "number" },
+                "categorie": { "type": "integer" },
+                "preuve": { "type": "string" },
+                "LocalisationTB": { "type": "string" },
+                "typeTuberculose": { "type": "string" },
+                "comptage_tuberculeux": { "type": "string" },
+                "antecedents": { "type": "string" },
+                "note": { "type": "string" }
+              },
+              "required": [
+                "IDPatient", "nom", "prenom", "DateNaissance", "poidsInitial",
+                "numero", "email", "adresse", "LocalisationTB"
+              ]
             }
           }
         ],
         "responses": {
-          "200": {
-            "description": "Patient ajouté avec succès",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "id": { "type": "string" },
-                "msg": { "type": "string" }
-              }
-            },
-            "examples": {
-              "application/json": {
-                "id": "12345",
-                "msg": "Patient ajouté avec succès"
-              }
-            }
+          "201": {
+            "description": "Patient ajouté avec succès"
           },
           "400": {
-            "description": "Requête invalide"
+            "description": "Requête invalide (champs manquants ou mal formatés)"
+          },
+          "409": {
+            "description": "Patient avec cet email existe déjà"
           }
         }
       },
       "get": {
-        "summary": "Obtenir la liste des patients",
+        "summary": "Récupérer la liste des patients",
         "responses": {
           "200": {
-            "description": "Liste des patients",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": { "type": "string" },
-                  "nom": { "type": "string" },
-                  "prenom": { "type": "string" },
-                  "ddn": { "type": "string", "format": "date" },
-                  "poids": { "type": "number" },
-                  "age": { "type": "integer" },
-                  "sex": { "type": "string" },
-                  "tlphn": { "type": "string" },
-                  "email": { "type": "string", "format": "email" },
-                  "adress": { "type": "string" },
-                  "situation": { "type": "string" },
-                  "maladie": { "type": "string" },
-                  "allergie": { "type": "string" }
-                }
-              }
-            }
+            "description": "Liste des patients récupérée avec succès"
           }
         }
       }
     },
-    "/patients/{id}": {
+    "/patients/{IDPatient}": {
       "get": {
-        "summary": "Obtenir un patient par ID",
+        "summary": "Obtenir un patient spécifique",
         "parameters": [
           {
-            "name": "id",
+            "name": "IDPatient",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer"
           }
         ],
         "responses": {
           "200": {
-            "description": "Un patient trouvé",
+            "description": "Détails du patient"
+          },
+          "404": {
+            "description": "Patient non trouvé"
+          }
+        }
+      },
+      "put": {
+        "summary": "Modifier un patient",
+        "parameters": [
+          {
+            "name": "IDPatient",
+            "in": "path",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "patient",
+            "description": "Mise à jour des informations du patient",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
-                "id": { "type": "string" },
                 "nom": { "type": "string" },
                 "prenom": { "type": "string" },
-                "ddn": { "type": "string", "format": "date" },
-                "poids": { "type": "number" },
-                "age": { "type": "integer" },
-                "sex": { "type": "string" },
-                "tlphn": { "type": "string" },
                 "email": { "type": "string", "format": "email" },
-                "adress": { "type": "string" },
-                "situation": { "type": "string" },
-                "maladie": { "type": "string" },
-                "allergie": { "type": "string" }
+                "age" :{"type":"integer"},
+                "adresse": { "type": "string" },
+                "numero": { "type": "string" },
+                "sexe": { "type": "string" },
+                "DateNaissance": { "type": "string", "format": "date" },
+                "poidsInitial": { "type": "number" },
+                "categorie": { "type": "integer" },
+                "preuve": { "type": "string" },
+                "LocalisationTB": { "type": "string" },
+                "typeTuberculose": { "type": "string" },
+                "comptage_tuberculeux": { "type": "string" },
+                "antecedents": { "type": "string" },
+                "note": { "type": "string" }
               }
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient mis à jour"
           },
           "404": {
             "description": "Patient non trouvé"
@@ -140,26 +137,15 @@
         "summary": "Supprimer un patient",
         "parameters": [
           {
-            "name": "id",
+            "name": "IDPatient",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "integer"
           }
         ],
         "responses": {
           "200": {
-            "description": "Patient supprimé avec succès",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "msg": { "type": "string" }
-              }
-            },
-            "examples": {
-              "application/json": {
-                "msg": "Patient supprimé avec succès"
-              }
-            }
+            "description": "Patient supprimé"
           },
           "404": {
             "description": "Patient non trouvé"

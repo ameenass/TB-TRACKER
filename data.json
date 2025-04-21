@@ -1,0 +1,145 @@
+[{
+  "_id": {
+    "$oid": "67b36c9790b00c889953f13a"
+  },
+  "nom": "zaghoum",
+  "prenom": "amina",
+  "ddn": "2025-02-17",
+  "poids": 23,
+  "age": 10,
+  "sex": "femme",
+  "tlphn": "0768393",
+  "email": "amina@gmail.com",
+  "adress": "wedforcha",
+  "situation": "nvCas",
+  "maladie": "diabete",
+  "allergie": "nthng"
+},
+{
+  "_id": {
+    "$oid": "67b36e2390b00c889953f13b"
+  },
+  "nom": "zeroual",
+  "prenom": "serine",
+  "ddn": "2024-02-17",
+  "poids": 20,
+  "age": 10,
+  "sex": "femme",
+  "tlphn": "0769393",
+  "email": "aserinea@gmail.com",
+  "adress": "wdforcha",
+  "situation": "nCas",
+  "maladie": "diabete",
+  "allergie": "nthng"
+},
+{
+  "_id": {
+    "$oid": "67b3769790b00c889953f13c"
+  },
+  "nom": "zaghoum",
+  "prenom": "malak",
+  "email": "stefdr2020@gmail.com",
+  "age": "2004",
+  "maladie": "diabete",
+  "allergie": "jsp",
+  "tlphn": "0698010705",
+  "adress": "wed forhca",
+  "situation": "célibataire",
+  "sex": "Femme",
+  "ddn": "2004-07-28",
+  "poidsInitial": "61"
+},
+{
+  "_id": {
+    "$oid": "67b3a58490b00c889953f13d"
+  },
+  "nom": "zaghoum",
+  "prenom": "selma",
+  "email": "selmazaghoum@gmail.com",
+  "age": "19",
+  "maladie": "il y a pas",
+  "allergie": "eczema",
+  "tlphn": "0698010706",
+  "adress": "la cite",
+  "situation": "célibataire",
+  "sex": "Femme",
+  "ddn": "2006-10-05",
+  "poidsInitial": "55"
+},
+{
+  "_id": {
+    "$oid": "67b3ae6390b00c889953f13e"
+  },
+  "id": "2",
+  "nom": "rizzi ",
+  "prenom": "karima",
+  "email": "aminarz10@gmail.com",
+  "age": "50",
+  "maladie": "tension",
+  "allergie": "eczema",
+  "tlphn": "0698010805",
+  "adress": "wed forcha",
+  "situation": "nv-cas",
+  "sex": "Femme",
+  "ddn": "1973-07-30",
+  "poidsInitial": "68"
+},
+{
+  "_id": {
+    "$oid": "67cb0b0945a7a18784a67db3"
+  },
+  "id": "36",
+  "nom": "chouichi",
+  "prenom": "ansem",
+  "email": "ansem@gmail.com",
+  "age": "10",
+  "maladie": "aucune",
+  "allergie": "eczema",
+  "tlphn": "0698010706",
+  "adresse": "wed forcha",
+  "situation": "nv-cas",
+  "sexe": "Femme",
+  "ddn": "2015-03-07",
+  "poidsInitial": "61"
+},
+{
+  "_id": {
+    "$oid": "67d9cbcf45bab14bd33a2e6d"
+  },
+  "id": "10",
+  "nom": "zaghoum",
+  "prenom": "karima",
+  "email": "aminarz910@gmail.com",
+  "age": "20",
+  "maladie": "diabete",
+  "allergie": "eczema",
+  "tlphn": "0698010705",
+  "adresse": "wed forcha",
+  "situation": "retraitement",
+  "sexe": "Femme",
+  "ddn": "2020-10-14",
+  "poidsInitial": "56"
+},
+{
+  "_id": {
+    "$oid": "67d9ebb845bab14bd33a2e6e"
+  },
+  "id": "10",
+  "nom": "zaghoume ",
+  "prenom": "amina",
+  "email": "aminarz8@gmail.com",
+  "age": "20",
+  "maladie": "",
+  "allergie": "",
+  "tlphn": "",
+  "adresse": "wed forcha",
+  "situation": "",
+  "sexe": "Femme",
+  "ddn": "2004-07-28",
+  "poidsInitial": "54",
+  "categorie": "2",
+  "preuve": "Bactériologique",
+  "comptageTuberculeux": "",
+  "antecedents": [],
+  "remarque": "rien"
+}]
