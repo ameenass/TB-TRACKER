@@ -24,25 +24,6 @@
 //   }, []);
 
 
-//   // useEffect(() => {
-//   //   const fetchPatients = () => {
-//   //     fetch("/api/patients") // Remplace par l'URL de ton API
-//   //       .then((response) => {
-//   //         if (!response.ok) {
-//   //           throw new Error("Erreur lors de la récupération des patients");
-//   //         }
-//   //         return response.json();
-//   //       })
-//   //       .then((data) => {
-//   //         setPatients(data);
-//   //       })
-//   //       .catch((error) => {
-//   //         console.error("Erreur: ", error);
-//   //       });
-//   //   };
-
-//   //   fetchPatients();
-//   // }, []);
 
 
 // //filtrer les patients
@@ -119,6 +100,7 @@ function SearchPatient() {
           throw new Error("Erreur lors de la récupération des patients");
         }
         const data = await response.json();
+        console.log("patients récupérés ",data)
         setPatients(data);
       } catch (error) {
         console.error("Erreur: ", error);
@@ -132,9 +114,9 @@ function SearchPatient() {
     ? patients.filter((patient) => {
         const fullName = `${patient.nom.toLowerCase()} ${patient.prenom.toLowerCase()}`;
         return (
-          patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.id.toString().includes(searchTerm) ||
+          patient.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient._id?.toString().includes(searchTerm) ||
           fullName.includes(searchTerm.toLowerCase())
         );
       })
@@ -155,28 +137,21 @@ function SearchPatient() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPatients.map((patient) => (
             <div
-              key={patient.id}
+              key={patient._id}
               className="bg-white p-4 rounded-2xl shadow-lg border hover:shadow-2xl transition"
             >
               <h2 className="text-xl font-bold mb-2">
                 {patient.nom} {patient.prenom}
               </h2>
-              <p className="text-gray-700">ID : {patient.id}</p>
+              <p className="text-gray-700">ID : {patient._id}</p>
               <p className="text-gray-700">Âge : {patient.age || "Non renseigné"} ans</p>
               <p className="text-gray-700">Catégorie : {patient.categorie || "Non renseigné"}</p>
-              <a
-                href="#"
-                className="text-white bg-teal-600 px-4 py-2 rounded-md hover:bg-teal-700 
-                transition duration-200 inline-block text-center"
-              >
-                Profile
-              </a>
+              <a href="#" className="text-white bg-teal-600 px-4 py-2 rounded-md hover:bg-teal-70transition duration-200 inline-block text-center">
+                Profile</a>
             </div>
           ))}
-        </div>
-      ) : (
-        <p className="text-gray-500">Aucun patient trouvé.</p>
-      )}
+        </div>)     : ( <p className="text-gray-500">Aucun patient trouvé</p> )
+        }
     </div>
   );
 }

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel,  EmailStr
+from pydantic import BaseModel,EmailStr
 
 class AdresseListe(BaseModel):
      Rue: Optional[str]
@@ -11,7 +11,7 @@ class Antecedent(BaseModel):
      description: Optional[str]
 
 class PatientModel(BaseModel):
-    IDPatient: int
+    IDPatient: str
     nom: str
     prenom: str
     email: EmailStr

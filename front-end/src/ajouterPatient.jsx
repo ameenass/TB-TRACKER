@@ -641,7 +641,7 @@ const Formulaire = () => {
   const [LocalisationTB, setLocalisationTB] = useState('');
   const [selectedType, setSelectedType] = useState("");
   const [selectedSousType, setSelectedSousType] = useState("");
-  const [Comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
+  const [comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
   const [antecedents, setAntecedents] = useState([]);
   const [note, setNote] = useState('');
 
@@ -657,7 +657,7 @@ const Formulaire = () => {
       prenom,
       email,
       age,
-      Adresse: adresse,
+      adresse: adresse,
       numero,
       sexe,
       DateNaissance,
@@ -668,7 +668,7 @@ const Formulaire = () => {
       LocalisationTB,
       typeTuberculose:selectedSousType,
       antecedents: antecedents,
-      Comptage_tuberculeux:Comptage_tuberculeux,
+      comptage_tuberculeux:comptage_tuberculeux,
     };
 
     try {
@@ -820,7 +820,7 @@ const Formulaire = () => {
             <MultiBoxSelector
               id="Comptage_tuberculeux"
               options={['Proches atteints', 'Proches traités']}
-              selectedValues={Comptage_tuberculeux}
+              selectedValues={comptage_tuberculeux}
               onChange={setComptage_tuberculeux}
             />
           </div>

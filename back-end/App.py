@@ -28,9 +28,9 @@ def home():
     return 'Bienvenue sur la page de TB Tracker!'
 
 
-@app.route("/adresses", methods=["GET"])
-def get_adresses():     #juste pour tester 
-    return jsonify(["Paris", "Lyon", "Marseille"])
+# @app.route("/adresses", methods=["GET"])
+# def get_adresses():     #juste pour tester 
+#     return jsonify(["Paris", "Lyon", "Marseille"])
 
 
 @app.route('/patients', methods=['POST'])
@@ -40,14 +40,14 @@ def add_patient():
             data = request.get_json()
             patient = PatientModel(**data)
         except ValidationError as e:
-            return jsonify({'error': e.errors()}), 400  # bad request 
+            return jsonify({'error': e.errors()}) , 400  # bad request 
 
         
         if db.find_one({"email": patient.email}):
-            return jsonify({'error': "Un patient avec cet email existe déjà"}), 409
+            return jsonify({'error': "Un patient avec cet email existe déja"}), 409
 
         result = db.insert_one(patient.dict())
-        return jsonify({'id': str(result.inserted_id), 'msg': "Patient ajouté avec succès!"}), 201
+        return jsonify({'id': str(result.inserted_id), 'msg': "Patient ajouté avec succes!"}), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500  # erreur du serveur

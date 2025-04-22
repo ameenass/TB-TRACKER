@@ -21,12 +21,21 @@
             "schema": {
               "type": "object",
               "properties": {
-                "IDPatient": { "type": "integer" },
+                "IDPatient": { "type": "string" },
                 "nom": { "type": "string" },
                 "prenom": { "type": "string" },
                 "email": { "type": "string", "format": "email" },
                 "age" :{"type":"integer"},
-                "adresse": { "type": "string" },
+                "adresse": {
+                    "type": "array",
+                    "items": {
+                    "type": "object",
+                    "properties": {
+                      "Rue": { "type": "string" },
+                      "Wilaya": { "type": "string" },
+                      "Commune": { "type": "string" }
+                      }
+                   }},
                 "numero": { "type": "string" },
                 "sexe": { "type": "string" },
                 "DateNaissance": { "type": "string", "format": "date" },
@@ -36,7 +45,16 @@
                 "LocalisationTB": { "type": "string" },
                 "typeTuberculose": { "type": "string" },
                 "comptage_tuberculeux": { "type": "string" },
-                "antecedents": { "type": "string" },
+                "antecedents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
                 "note": { "type": "string" }
               },
               "required": [
@@ -108,7 +126,17 @@
                 "prenom": { "type": "string" },
                 "email": { "type": "string", "format": "email" },
                 "age" :{"type":"integer"},
-                "adresse": { "type": "string" },
+                "adresse": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Rue": { "type": "string" },
+          "Wilaya": { "type": "string" },
+          "Commune": { "type": "string" }
+        }
+      }
+    },
                 "numero": { "type": "string" },
                 "sexe": { "type": "string" },
                 "DateNaissance": { "type": "string", "format": "date" },
@@ -118,7 +146,15 @@
                 "LocalisationTB": { "type": "string" },
                 "typeTuberculose": { "type": "string" },
                 "comptage_tuberculeux": { "type": "string" },
-                "antecedents": { "type": "string" },
+                "antecedents": {
+                   "type": "array",
+                   "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "description": { "type": "string" }
+                      }
+                   }},
                 "note": { "type": "string" }
               }
             }
