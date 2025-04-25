@@ -635,19 +635,21 @@ const Formulaire = () => {
   const [numero, setNumero] = useState('');
   const [sexe, setSexe] = useState('');
   const [DateNaissance, setDateNaissance] = useState('');
-  const [poidsInitial, setPoidsInitial] = useState(50);
-  const [categorie, setCategorie] = useState('');
-  const [preuve, setPreuve] = useState('');
-  const [LocalisationTB, setLocalisationTB] = useState('');
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedSousType, setSelectedSousType] = useState("");
-  const [comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
-  const [antecedents, setAntecedents] = useState([]);
-  const [note, setNote] = useState('');
+  // const [poidsInitial, setPoidsInitial] = useState(50);
+  // const [categorie, setCategorie] = useState('');
+  // const [preuve, setPreuve] = useState('');
+  // const [LocalisationTB, setLocalisationTB] = useState('');
+  // const [selectedType, setSelectedType] = useState("");
+  // const [selectedSousType, setSelectedSousType] = useState("");
+  // const [comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
+  // const [antecedents, setAntecedents] = useState([]);
+  // const [note, setNote] = useState('');
 
   const handleEnregistrer = async () => {
-    if (!IDPatient || !nom || !prenom || !email || !age || !numero || !sexe || !DateNaissance || !poidsInitial || !categorie || !preuve || !LocalisationTB || !selectedSousType) {
-      toast.error("Tous les champs doivent être remplis !");
+     if (!IDPatient || !nom || !prenom || !email || !age || !numero || !sexe || !DateNaissance ) {
+    //   (!IDPatient || !nom || !prenom || !email || !age || !numero || !sexe || !DateNaissance || !poidsInitial || !categorie || !preuve || !LocalisationTB || !selectedSousType) {
+      
+     toast.error("Tous les champs doivent être remplis !");
       return;
     }
 
@@ -661,50 +663,61 @@ const Formulaire = () => {
       numero,
       sexe,
       DateNaissance,
-      poidsInitial,
-      categorie,
-      preuve,
-      note,
-      LocalisationTB,
-      typeTuberculose:selectedSousType,
-      antecedents: antecedents,
-      comptage_tuberculeux:comptage_tuberculeux,
+      // poidsInitial,
+      // categorie,
+      // preuve,
+      // note,
+      // LocalisationTB,
+      // typeTuberculose:selectedSousType,
+      // antecedents: antecedents,
+      // comptage_tuberculeux:comptage_tuberculeux,
     };
 
-    try {
-      const response = await fetch('http://localhost:5000/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (response.ok) {
-        toast.success("Données enregistrées avec succès !");
-      } else {
-        toast.error("Erreur lors de l'enregistrement des données.");
+    fetch('http://localhost:5000/patients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'enregistrement des données.");
       }
-    } catch (error) {
+      return response.json();
+    })
+    .then(data => {
+      toast.success("Données enregistrées avec succes !");
+      console.log("Réponse du backend :", data);
+      
+    })
+    .catch(error => {
       toast.error("Une erreur est survenue : " + error.message);
-    }
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     handleEnregistrer();
   };
-  const min = 30;
-  const max = 150;
-  const percent = ((poidsInitial - min) / (max - min)) * 100;
 
-  const typesTuberculose = {
-    Pulmonaire: ["Jamais traitée", "Déjà traitée"],
-    Extrapulmonaire: [
-      "Pleurale",
-      "Ganglionnaire",
-      "Ostéoarticulaire",
-      "Uro-génitale",
-      "Méningée"
-    ]
-  };
+  // const handleSubmit = useCallback((e) => {
+  //   e.preventDefault();
+  //   handleEnregistrer();
+  // }, [handleEnregistrer]);
+
+  // const min = 30;
+  // const max = 150;
+  // const percent = ((poidsInitial - min) / (max - min)) * 100;
+
+  // const typesTuberculose = {
+  //   Pulmonaire: ["Jamais traitée", "Déjà traitée"],
+  //   Extrapulmonaire: [
+  //     "Pleurale",
+  //     "Ganglionnaire",
+  //     "Ostéoarticulaire",
+  //     "Uro-génitale",
+  //     "Méningée"
+  //   ]
+  // };
 
   const handleTypeChange = (e) => {
     setSelectedType(e.target.value);
@@ -723,7 +736,7 @@ const Formulaire = () => {
           <CustomFormField label="Email" id="email" fieldType="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" Icon={Mail} />
           <CustomFormField label="Âge" id="age" fieldType="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="Âge" Icon={Calendar} />
           <CustomFormField label="Téléphone" id="numero" fieldType="tel" value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="Téléphone" Icon={Phone} />
-       
+       </div>
         {/*Adress*/}
         <div className="col-span-1">
           <AdresseSearchDropdown  id="adresse" adresse={adresse} setAdresse={setAdresse} />
@@ -740,7 +753,7 @@ const Formulaire = () => {
       </div>
           <CustomFormField label="Date de naissance" id="DateNaissance" fieldType="date" value={DateNaissance} onChange={(e) => setDateNaissance(e.target.value)} placeholder="" Icon={Calendar} />
 
-          {/* Poids */}
+          {/* Poids 
           <div className="w-full">
             <label className="block mb-1 text-gray-700 font-medium">Poids</label>
             <div className="relative w-full flex items-center p-2">
@@ -749,7 +762,7 @@ const Formulaire = () => {
               </span>
               <input type="range" min={min} max={max} id="poidsInitial" value={poidsInitial} onChange={(e) => setPoidsInitial(Number(e.target.value))} className="w-full" />
             </div>
-          </div>
+          </div>*/}
 
           {/* Sexe */}
           <div className="mb-4">
@@ -757,7 +770,7 @@ const Formulaire = () => {
             <CheckboxF id="sexe" value={sexe} onChange={(e) => setSexe(e.target.value)} />
           </div>
 
-          {/* Catégorie */}
+          {/* Catégorie 
           <CustomFormField
             label="Catégorie"
             id="categorie"
@@ -772,7 +785,7 @@ const Formulaire = () => {
             ]}
           />
 
-          {/* Preuve */}
+          {/* Preuve 
           <CustomFormField
             id="preuve"
             label="Preuve"
@@ -787,7 +800,7 @@ const Formulaire = () => {
             ]}
           />
 
-          {/* Localisation TB */}
+          {/* Localisation TB 
           <CustomFormField
             id="LocalisationTB"
             label="Localisation de la tuberculose"
@@ -797,7 +810,7 @@ const Formulaire = () => {
             fieldType="text"
           />
 
-          {/* Type et sous-type */}
+          {/* Type et sous-type 
           <CustomFormField
             id="typeTuberculose"
             label="Type et sous-type"
@@ -814,7 +827,7 @@ const Formulaire = () => {
 
         {/* Antécédents et comptage */}
         <div className="grid grid-cols-3 gap-4">
-          {/* Comptage tuberculeux */}
+          {/* Comptage tuberculeux 
           <div className="col-span-1">
             <label className="font-medium block mb-1">Comptage tuberculeux</label>
             <MultiBoxSelector
@@ -825,7 +838,7 @@ const Formulaire = () => {
             />
           </div>
 
-          {/* Antécédents */}
+          {/* Antécédents 
           <div className="col-span-2">
             <label className="font-medium block mb-1">Antécédents</label>
             <MultiBoxSelector
@@ -834,9 +847,9 @@ const Formulaire = () => {
               selectedValues={antecedents}
               onChange={setAntecedents}
             />
-          </div>
+          </div> */}
 
-          {/* Détails supplémentaires */}
+          {/* Détails supplémentaires 
           <div className="flex flex-col space-y-1 w-full mt-4">
             <label className="text-gray-700 text-sm">Détails supplémentaires</label>
             <textarea
@@ -847,7 +860,7 @@ const Formulaire = () => {
               placeholder="Ajoutez des détails supplémentaires ici..."
               className="border border-gray-300 rounded-lg p-2 bg-white text-gray-700 placeholder-gray-400"
             />
-          </div>
+          </div>*/}
         </div>
         <button type="submit" className="w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg">Enregistrer</button>
       </form>

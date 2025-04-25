@@ -37,7 +37,9 @@ def home():
 def add_patient():
     try:
         try:
+            
             data = request.get_json()
+            print(data)
             patient = PatientModel(**data)
         except ValidationError as e:
             return jsonify({'error': e.errors()}) , 400  # bad request 
@@ -55,7 +57,7 @@ def add_patient():
 
 @app.route('/fiche', methods =['POST'])
 def creaction_fiche():
-    data = request.json
+    data = request.get_json()
 
     IDPatient = data.get("IDPatient")
     date_debut = data.get("date_debut")  #juste string pour le moment,datetime.strptime
@@ -68,13 +70,24 @@ def creaction_fiche():
     "date_cloture": date_cloture,
     "statut": statut
 }
-    fiche_collection = db["fiches"]
+    fiche_collection = db["ficheTraitement"]
     result = fiche_collection.insert_one(fiche)
     fiche["_id"] = str(result.inserted_id)
-    fiche["IDPatient"] = str(fiche["IDPatient"])
+    #fiche["IDPatient"] = str(fiche["IDPatient"])
 
-    return jsonify(fiche), 201
+    return jsonify(fiche), 201  # created with succes
 
+# try:
+#         Data = request.get_json()
+#         fiche = FicheModel(**Data)
+#     except ValidationError as e:
+#             return jsonify({'error': e.errors()}) , 
+
+#      ficheDict = fiche.dict()
+#      fiche_collection = db["ficheTraitement"]
+#      Result = fiche_collection.insert_one(ficheDict)
+#      fiche_dict["_id"] = str(Result.inserted_id)
+#      return jsonify(ficheDict) , 201
 @app.route('/patients', methods=['GET'])
 def get_patients():
     try:
