@@ -60,7 +60,7 @@ const CustomFormField = ({
     );
   };
   
-export default function FicheTraitementModal({ open, setOpenModal,onAdd }) {
+export default function FicheTraitementModal({ open, setOpenModal }) {
  const[date_debut, setDate_debut]=useState('');
  const[date_cloture, setDate_cloture]=useState('');
  const[statut, setStatut]=useState('');
@@ -81,18 +81,18 @@ export default function FicheTraitementModal({ open, setOpenModal,onAdd }) {
     }
   
     const formData = {
-      idfich: uuidv4(),
-      date_debut, 
+      idfich: uuidv4(), // génère un id unique
+      date_debut, // attention: doit être bien au format "YYYY-MM-DD"
       date_cloture,
       statut,
       categorie,
       LocalisationTB,
       preuve,
-      selectedSousType, 
+      selectedSousType, // pas "typeTuberculose"
       Comptage_tuberculeux: Comptage_tuberculeux.length > 0,
-      antecedents, 
-      poidsInitial: parseFloat(poidsInitial), 
-      note: note || "", 
+      antecedents, // transforme tableau -> string séparée par virgule
+      poidsInitial: parseFloat(poidsInitial), // bien float
+      note: note || "", // optionnel
     };
 
     try {
@@ -112,26 +112,10 @@ export default function FicheTraitementModal({ open, setOpenModal,onAdd }) {
         toast.error("Une erreur est survenue : " + error.message);
       }
 };
-const handleSubmit = (e) => {
-  e.preventDefault();  
-
-  
-  handleEnregistrer();  
-  
-  
-  const newFiche = {
-  //  idfich: uuidv4(),
-    date_debut,
-  };
-
-  
-  onAdd(newFiche); 
-
- 
-  setOpenModal(false); 
-};
-
-      
+       const handleSubmit = (e) => {
+        e.preventDefault();
+        handleEnregistrer();
+      };
       const min = 30;
       const max = 150;
       const percent = ((poidsInitial - min) / (max - min)) * 100;
@@ -150,7 +134,7 @@ const handleSubmit = (e) => {
  
     if (!open) return null;
     return(
-        <div className=" mx-auto overlay fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center">
+        <div className=" pt-24 mx-auto overlay fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center">
            <div className="modalcontainer absolute bg-slate-100 w-2/3 max-h-[90vh] overflow-y-auto mx-auto p-6 my-4 rounded-lg shadow-lg">
             <ToastContainer />
       <h2 className="text-xl w-full font-semibold mb-6 text-center text-gray-800">Fiche de traitement</h2>
@@ -274,12 +258,6 @@ const handleSubmit = (e) => {
 </div>
      </div>
    <button type="submit" className="w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg">Enregistrer</button>
-   <button
-  onClick={() => setOpenModal(false)}
-  className="absolute top-4 right-4 text-gray-600 hover:text-red-600"
->
-  ✕
-</button>
      </form>
               </div>
               </div>

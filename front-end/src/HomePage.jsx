@@ -213,7 +213,7 @@ import { Home, Search, UserPlus, BookOpen } from "lucide-react";
 
 const tabs = [
   { name: "Home", icon: <Home size={20} />, path: "/" },
-  { name: "Rechercher", icon: <Search size={20} />, path: "#" }, // il faut regler ca apres
+  { name: "Rechercher", icon: <Search size={20} />, path: "/rechercher" }, // il faut regler ca apres
   { name: "Ajouter patient", icon: <UserPlus size={20} />, path: "/ajouterpatient" },
   { name: "Blog", icon: <BookOpen size={20} />, path: "/blog" },
 ];
@@ -221,47 +221,7 @@ const tabs = [
 function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const [activeTab, setActiveTab] = useState("Home");
-  const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const response = await fetch("http://127.0.0.1:5000/patients");
-        if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des patients");
-        }
-        let data = await response.json();
-
-        // pour valider les champs 
-        data = data.map((patient) => ({
-          ...patient,
-          nom: patient.nom || "",
-          prenom: patient.prenom || "",
-          id: patient.id || 0,
-        }));
-
-        setPatients(data);
-      } catch (error) {
-        console.error("Erreur: ", error);
-      }
-    };
-
-    fetchPatients();
-  }, []);
-
-  // filtrer les patients
-  const filteredPatients = searchTerm
-    ? patients.filter((patient) => {
-        const fullName = `${patient.nom?.toLowerCase() || ""}, ${patient.prenom?.toLowerCase() || ""}`;
-        return (
-          (patient.nom?.toLowerCase() || "").includes(searchTerm.toLowerCase()) || //par nom+verfication
-          (patient.prenom?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-          (patient.id?.toString() || "").includes(searchTerm) ||
-          fullName.includes(searchTerm.toLowerCase()) //par nom+prenom+verfication
-        );
-      })
-    : [];
 
   return (
     <div className="w-full h-full fixed bg-emerald-50">
@@ -292,40 +252,7 @@ function Navbar() {
           </ul>
         </div>
 
-        {/*  barre de recherche dans rechercher */}
-        {activeTab === "Rechercher" && (
-          <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-1/2 bg-white shadow-md p-4 rounded-lg">
-            <input
-              type="text"
-              placeholder="Rechercher par nom, prénom, ID..."
-              className="w-full p-2 border rounded-lg shadow-md"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {/* ici mapping les cartes */}
-            {filteredPatients.length > 0 && (
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPatients.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className="bg-white p-4 rounded-2xl shadow-lg border hover:shadow-2xl transition"
-                  >
-                    <h2 className="text-xl font-bold mb-2">
-                      {patient.nom} {patient.prenom}
-                    </h2>
-                    <p className="text-gray-700">ID : {patient.id}</p>
-                    <p className="text-gray-700">Âge : {patient.age || "Non renseigné"} ans</p>
-                    <p className="text-gray-700">Catégorie : {patient.categorie || "Non renseigné"}</p>
-                    <a href="#" className="text-white bg-teal-600 px-4 py-2 rounded-md hover:bg-teal-700 
-                    transition duration-200 inline-block text-center"> Profile
-                   </a>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
+       
         {/* Reste du code pour les notifications, paramètres, etc. */}
         <div className="flex items-center space-x-6">
           <div className="relative cursor-pointer rounded-full bg-white p-2">

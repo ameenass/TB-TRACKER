@@ -1,12 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Home, Search, UserPlus, BookOpen, Menu as MenuIcon } from "lucide-react";
 import lungs from "./assets/lungs.png";
 import avatar from "./assets/avatar.png";
-import SearchPatient from "./SearchPatient"; // Import the separated component
-import Formulaire from "./ajouterPatient";
-
 
 const tabs = [
   { name: "Home", icon: <Home size={20} />, path: "/" },
@@ -14,13 +11,14 @@ const tabs = [
   { name: "Ajouter patient", icon: <UserPlus size={20} />, path: "/ajouterpatient" },
   { name: "Blog", icon: <BookOpen size={20} />, path: "/blog" },
 ];
+
 function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const [activeTab, setActiveTab] = useState("Home");
 
   return (
-    <div className="w-full fixed bg-emerald-50">
-      <header className="flex justify-between items-center text-black py-5 px-8 drop-shadow-md">
+    <div className="w-full fixed top-0 left-0 h-20 z-50 bg-emerald-50">
+      <header className="flex justify-between items-center h-full text-black px-8 drop-shadow-md">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
           <img src={lungs} alt="lungs" className="w-8 h-7 hover:scale-105 transition-all" />
@@ -28,7 +26,7 @@ function Navbar() {
         </Link>
         
         {/* Desktop Navigation */}
-        <div className="bg-emerald-100 border-1 rounded-3xl hidden xl:flex">
+        <div className="bg-emerald-100 rounded-3xl hidden xl:flex">
           <ul className="flex items-center gap-3 font-semibold text-base">
             {tabs.map((tab) => (
               <Link
@@ -47,7 +45,7 @@ function Navbar() {
 
         {/* Profile & Menu */}
         <div className="flex items-center space-x-6">
-          <div className="relative cursor-pointer rounded-full bg-white p-2">🔔</div>
+          <div className="cursor-pointer rounded-full bg-white p-2">🔔</div>
           <div className="cursor-pointer rounded-full bg-white p-2">⚙️</div>
           <button className="flex items-center gap-2 bg-transparent rounded-lg hover:bg-gray-50 transition">
             <img src={avatar} alt="profile" className="h-10 w-10 rounded-full" />
@@ -64,7 +62,7 @@ function Navbar() {
         initial={{ x: "100%", opacity: 0 }}
         animate={showMenu ? { x: 0, opacity: 1 } : { x: "100%", opacity: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="absolute top-0 right-0 w-64 h-full bg-white flex flex-col items-center gap-6 shadow-lg xl:hidden"
+        className="absolute top-0 right-0 w-64 h-full bg-white flex flex-col items-center gap-6 shadow-lg xl:hidden z-50 pt-20"
       >
         {tabs.map((tab) => (
           <Link

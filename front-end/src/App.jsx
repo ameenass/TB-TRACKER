@@ -40,6 +40,24 @@
 
 
 
+// import React from 'react';
+// import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+// import Layout from './Layout.jsx';
+// import './index.css';
+// import Formulaire from './ajouterPatient.jsx';
+// import SearchPatient from './SearchPatient.jsx';
+// import Navbar from './Navbar.jsx';
+// import Home from './Home.jsx';
+// import axios from 'axios';
+// import FichePer from './FichePer.jsx';
+// function App() {
+//   return (
+   
+//   <FichePer />  
+//   );
+// }
+
+// export default App;
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
@@ -49,6 +67,7 @@ import Formulaire from './ajouterPatient.jsx';
 import SearchPatient from './SearchPatient.jsx';
 import Navbar from './Navbar.jsx';
 import Home from './Home.jsx';
+import FichePer from './FichePer.jsx';
 function App() {
   return (
     <Router>
@@ -58,6 +77,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="rechercher" element={<SearchPatient />} />
           <Route path="ajouterpatient" element={<Formulaire />} />
+          <Route path="profile/:id" element={<FichePer />}/>
         </Route>
       </Routes>
     </Router>

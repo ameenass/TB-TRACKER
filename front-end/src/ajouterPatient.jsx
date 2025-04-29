@@ -626,30 +626,20 @@ const CustomFormField = ({
 };
 
 const Formulaire = () => {
-  const [IDPatient, setIDPatient] = useState('');
+  const [IDPatient , setIDPatient] = useState('') ;
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
   const [age, setAge] = useState('');
-  const [adresse, setAdresse] = useState([{ Rue: "", Wilaya: "", Commune: "" }]);
+  const [adresse, setAdresse] = useState([{  wilaya: "", commune: "" }]);
   const [numero, setNumero] = useState('');
-  const [sexe, setSexe] = useState('');
+ const [sexe, setSexe] = useState('');
   const [DateNaissance, setDateNaissance] = useState('');
-  // const [poidsInitial, setPoidsInitial] = useState(50);
-  // const [categorie, setCategorie] = useState('');
-  // const [preuve, setPreuve] = useState('');
-  // const [LocalisationTB, setLocalisationTB] = useState('');
-  // const [selectedType, setSelectedType] = useState("");
-  // const [selectedSousType, setSelectedSousType] = useState("");
-  // const [comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
-  // const [antecedents, setAntecedents] = useState([]);
-  // const [note, setNote] = useState('');
-
+  const [poidsInitial, setPoidsInitial] = useState(50);
+  
   const handleEnregistrer = async () => {
-     if (!IDPatient || !nom || !prenom || !email || !age || !numero || !sexe || !DateNaissance ) {
-    //   (!IDPatient || !nom || !prenom || !email || !age || !numero || !sexe || !DateNaissance || !poidsInitial || !categorie || !preuve || !LocalisationTB || !selectedSousType) {
-      
-     toast.error("Tous les champs doivent être remplis !");
+     if (!nom || !prenom || !email || !age ||!sexe || !numero  || !DateNaissance ) {
+    toast.error("Tous les champs doivent être remplis !");
       return;
     }
 
@@ -658,79 +648,90 @@ const Formulaire = () => {
       nom,
       prenom,
       email,
-      age,
+      age: parseInt(age),   
       adresse: adresse,
       numero,
       sexe,
       DateNaissance,
-      // poidsInitial,
-      // categorie,
-      // preuve,
-      // note,
-      // LocalisationTB,
-      // typeTuberculose:selectedSousType,
-      // antecedents: antecedents,
-      // comptage_tuberculeux:comptage_tuberculeux,
+       poidsInitial,
+      
     };
 
-    fetch('http://localhost:5000/patients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    })
+  //   fetch('http://localhost:5000/patients', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify(formData),
+  //   })
+  //   .then(response => {
+  //     if (!response.ok) {
+  //       throw new Error("Erreur lors de l'enregistrement des données.");
+  //     }
+  //     return response.json();
+  //   })
+  //   .then(data => {
+  //     toast.success("Données enregistrées avec succes !");
+  //     console.log("Réponse du backend :", data);
+      
+  //   })
+  //   .catch(error => {
+  //     toast.error("Une erreur est survenue : " + error.message);
+  //   });
+  // };
+
+  
+  fetch('http://localhost:5000/patients', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData),
+  })
     .then(response => {
       if (!response.ok) {
-        throw new Error("Erreur lors de l'enregistrement des données.");
+        return response.json().then(errorData => {
+          throw new Error(errorData.error || "Erreur lors de l'enregistrement des données.");
+        });
       }
       return response.json();
     })
     .then(data => {
-      toast.success("Données enregistrées avec succes !");
-      console.log("Réponse du backend :", data);
-      
+      // Met à jour le champ IDPatient avec la valeur retournée
+      setIDPatient(data.IDPatient);
+
+  
+      toast.success("Données enregistrées avec succès !");
+      toast.info(`Mot de passe du patient : ${data.IDPatient}`, {
+        autoClose: false,
+      });
+      console.log("Mot de passe généré :", data.IDPatient);
     })
     .catch(error => {
       toast.error("Une erreur est survenue : " + error.message);
     });
-  };
+  
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
     handleEnregistrer();
   };
-
-  // const handleSubmit = useCallback((e) => {
-  //   e.preventDefault();
-  //   handleEnregistrer();
-  // }, [handleEnregistrer]);
-
-  // const min = 30;
-  // const max = 150;
-  // const percent = ((poidsInitial - min) / (max - min)) * 100;
-
-  // const typesTuberculose = {
-  //   Pulmonaire: ["Jamais traitée", "Déjà traitée"],
-  //   Extrapulmonaire: [
-  //     "Pleurale",
-  //     "Ganglionnaire",
-  //     "Ostéoarticulaire",
-  //     "Uro-génitale",
-  //     "Méningée"
-  //   ]
-  // };
-
-  const handleTypeChange = (e) => {
-    setSelectedType(e.target.value);
-    setSelectedSousType("");
-  };
+  const min = 30;
+  const max = 150;
+  const percent = ((poidsInitial - min) / (max - min)) * 100;
 
   return (
-    <div className="max-w-6xl mx-auto bg-gray-100 p-5 rounded-lg shadow-lg mt-10">
+    <div className=" pt-24 max-w-6xl mx-auto bg-gray-100 p-5 rounded-lg shadow-lg mt-10">
       <ToastContainer />
       <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">Formulaire de patient</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-9">
-          <CustomFormField label="ID" id="IDPatient" fieldType="text" value={IDPatient} onChange={(e) => setIDPatient(e.target.value)} placeholder="ID" Icon={IdCard} />
+        <input
+  type="text"
+  name="IDPatient"
+  value={IDPatient}
+  readOnly
+  placeholder="Mot de passe généré"
+  className="form-control"
+/>
+
           <CustomFormField label="Nom" id="nom" fieldType="text" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Nom" Icon={User} />
           <CustomFormField label="Prénom" id="prenom" fieldType="text" value={prenom} onChange={(e) => setPrenom(e.target.value)} placeholder="Prénom" Icon={User} />
           <CustomFormField label="Email" id="email" fieldType="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" Icon={Mail} />
@@ -745,15 +746,15 @@ const Formulaire = () => {
         <label className="block font-semibold">Adresse sélectionnée :</label>
         <p className="text-gray-700">
         
-  {adresse?.[0]?.Rue && adresse?.[0]?.Commune && adresse?.[0]?.Wilaya
-    ? `${adresse[0].Rue}, ${adresse[0].Commune}, ${adresse[0].Wilaya}`
+  {adresse?.[0]?.Rue && adresse?.[0]?.commune && adresse?.[0]?.wilaya
+    ? `${adresse[0].Rue}, ${adresse[0].commune}, ${adresse[0].wilaya}`
     : "Aucune adresse sélectionnée."}
     </p>
 
-      </div>
+      </div> 
           <CustomFormField label="Date de naissance" id="DateNaissance" fieldType="date" value={DateNaissance} onChange={(e) => setDateNaissance(e.target.value)} placeholder="" Icon={Calendar} />
 
-          {/* Poids 
+           Poids 
           <div className="w-full">
             <label className="block mb-1 text-gray-700 font-medium">Poids</label>
             <div className="relative w-full flex items-center p-2">
@@ -762,111 +763,19 @@ const Formulaire = () => {
               </span>
               <input type="range" min={min} max={max} id="poidsInitial" value={poidsInitial} onChange={(e) => setPoidsInitial(Number(e.target.value))} className="w-full" />
             </div>
-          </div>*/}
+          </div>
 
           {/* Sexe */}
-          <div className="mb-4">
+           <div className="mb-4">
             <label className="text-gray-700 text-sm">Sexe</label>
             <CheckboxF id="sexe" value={sexe} onChange={(e) => setSexe(e.target.value)} />
-          </div>
+          </div> 
 
-          {/* Catégorie 
-          <CustomFormField
-            label="Catégorie"
-            id="categorie"
-            value={categorie}
-            onChange={(e) => setCategorie(e.target.value)}
-            placeholder="Sélectionnez une catégorie"
-            isSelect={true}
-            options={[
-              { label: 'I', value: 'I' },
-              { label: 'II', value: 'II' },
-              { label: 'III', value: 'III' },
-            ]}
-          />
-
-          {/* Preuve 
-          <CustomFormField
-            id="preuve"
-            label="Preuve"
-            value={preuve}
-            onChange={(e) => setPreuve(e.target.value)}
-            placeholder="Sélectionnez une preuve"
-            isSelect={true}
-            options={[
-              { label: 'Bactériologique', value: 'Bactériologique' },
-              { label: 'Histologique', value: 'Histologique' },
-              { label: 'Sans preuve', value: 'Sans preuve' },
-            ]}
-          />
-
-          {/* Localisation TB 
-          <CustomFormField
-            id="LocalisationTB"
-            label="Localisation de la tuberculose"
-            value={LocalisationTB}
-            onChange={(e) => setLocalisationTB(e.target.value)}
-            placeholder="Localisation"
-            fieldType="text"
-          />
-
-          {/* Type et sous-type 
-          <CustomFormField
-            id="typeTuberculose"
-            label="Type et sous-type"
-            value={selectedSousType}
-            onChange={(e) => setSelectedSousType(e.target.value)}
-            placeholder="Sélectionnez un sous-type"
-            isSelect={true}
-            options={Object.entries(typesTuberculose).map(([type, sousTypes]) => ({
-              label: type,
-              options: sousTypes,
-            }))}
-          />
-        </div>
-
-        {/* Antécédents et comptage */}
-        <div className="grid grid-cols-3 gap-4">
-          {/* Comptage tuberculeux 
-          <div className="col-span-1">
-            <label className="font-medium block mb-1">Comptage tuberculeux</label>
-            <MultiBoxSelector
-              id="Comptage_tuberculeux"
-              options={['Proches atteints', 'Proches traités']}
-              selectedValues={comptage_tuberculeux}
-              onChange={setComptage_tuberculeux}
-            />
-          </div>
-
-          {/* Antécédents 
-          <div className="col-span-2">
-            <label className="font-medium block mb-1">Antécédents</label>
-            <MultiBoxSelector
-              id="antecedents"
-              options={['Tuberculose', 'HTA', 'Diabète', 'Insuffisance rénale', 'Cardiopathie']}
-              selectedValues={antecedents}
-              onChange={setAntecedents}
-            />
-          </div> */}
-
-          {/* Détails supplémentaires 
-          <div className="flex flex-col space-y-1 w-full mt-4">
-            <label className="text-gray-700 text-sm">Détails supplémentaires</label>
-            <textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={note.split('\n').length + 1}
-              placeholder="Ajoutez des détails supplémentaires ici..."
-              className="border border-gray-300 rounded-lg p-2 bg-white text-gray-700 placeholder-gray-400"
-            />
-          </div>*/}
-        </div>
-        <button type="submit" className="w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg">Enregistrer</button>
+           <button type="submit" className="w-full py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg">Enregistrer</button>
       </form>
        
     </div>
   );
 };
 
-export default Formulaire;
+export default Formulaire; 
