@@ -3,157 +3,305 @@ from flask_pymongo import PyMongo
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
 from bson.objectid import ObjectId
-from modeleP import PatientModel , SessionModel , FicheModel
+from modeleP import PatientModel, SessionModel, FicheModel, MedecinModel
 from pydantic import ValidationError
 from datetime import date
 import secrets
 import string
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from pymongo import MongoClient
+
 
 app = Flask(__name__)
+CORS(app) 
+
+caracteres = string.ascii_letters + string.digits
+cle_secrete = '' .join(secrets.choice(caracteres) for _ in range(12))
+app.config['JWT_SECRET_KEY'] = cle_secrete
+
+#app.config['JWT_SECRET_KEY'] = 'TaCléSecrète'  
+jwt = JWTManager(app)  
+
 app.config["MONGO_URI"] = "mongodb://localhost:27017/tb_tracker"
 mongo = PyMongo(app)
-CORS(app)
+
+
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger.json'
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL, 
+    API_URL, 
+    config={'app_name': "TB Tracker API"}
+)
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+
+patients_collection = mongo.db.patients
+medecins_collection = mongo.db.medecins
+ficheTraitement = mongo.db.ficheTraitement
+session_collection = mongo.db.session
 session = mongo.db.session
 
-ficheTraitement = mongo.db.ficheTraitement  
-
-db = mongo.db.patients
-SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.json' 
-swaggerui_blueprint = get_swaggerui_blueprint(
-    SWAGGER_URL, API_URL, config={'app_name': "TB Tracker API"}
-    )
-app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 @app.route('/')
 def home():
     return 'Bienvenue sur la page de TB Tracker!'
 
-
-# @app.route("/adresses", methods=["GET"])
-# def get_adresses():     #juste pour tester 
-#     return jsonify(["Paris", "Lyon", "Marseille"])
-
-
 @app.route('/patients', methods=['POST'])
 def add_patient():
     try:
-        try:
-            data = request.get_json()
-            alphabet = string.ascii_letters + string.digits
-            mdp_genere = ''.join(secrets.choice(alphabet) for _ in range(6)) # secrets--> aleatoire sécurisé et il y a random pas sécurisé
-            data['IDPatient'] = mdp_genere
+        data = request.get_json()
 
-            patient = PatientModel(**data)
-        except ValidationError as e:
-            return jsonify({'error': e.errors()}), 400  # bad request
+        alphabet = string.ascii_letters + string.digits
+        mdp_genere = ''.join(secrets.choice(alphabet) for _ in range(6))
+        hashed_mdp = generate_password_hash(mdp_genere) # on le hache avant de l'utiliser non lisible
+        data['mot_de_passe'] = hashed_mdp
 
-        if db.find_one({"email": patient.email}):
+        patient = PatientModel(**data)
+
+        if patients_collection.find_one({"email": patient.email}):
             return jsonify({'error': "Un patient avec cet email existe déjà"}), 409
 
         patient_dict = patient.model_dump()
-
+        
         if isinstance(patient_dict.get('DateNaissance'), date):
             patient_dict['DateNaissance'] = patient_dict['DateNaissance'].isoformat()
 
-        result = db.insert_one(patient_dict)
+        result =patients_collection.insert_one(patient_dict)
+
         return jsonify({
             'id': str(result.inserted_id),
             'msg': "Patient ajouté avec succès!",
-            'IDPatient': mdp_genere 
+            'IDPatient': mdp_genere  # On retourne le mot de passe généré pour l'informer
         }), 201
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500  # erreur du serveur
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+def login_medecin():
+    try:
+        data = request.get_json()
+        nom = data.get('nom')
+        password = data.get('mot_de_passe')
+
+        if not nom or not password:
+            return jsonify({'error': "Nom et mot de passe requis"}), 400
+
+        medecin = medecins_collection.find_one({"nom": nom})
+        if not medecin:
+            return jsonify({'error': "Médecin non trouvé"}), 404
+
+        if not check_password_hash(medecin['mot_de_passe'], password):
+            return jsonify({'error': "Mot de passe incorrect"}), 401
+
+        access_token = create_access_token(identity=nom) #le nom est encodé --> pour connaitre a les prochaines cnx l'identite de medecin
+
+        return jsonify({
+            'msg': "Connexion réussie!",
+            'token': access_token, #contient le nom encodé
+            'nomMedecin': nom
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
 @app.route('/patients', methods=['GET'])
 def get_patients():
     try:
         patients = []
-        for doc in db.find():
+        for doc in patients_collection.find():
             doc['_id'] = str(doc['_id'])  
             patients.append(doc)
         return jsonify(patients)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# @app.route('/patients/<IDPatient>', methods=['GET'])
-# def get_patient(IDPatient):
-#     try:
-#         patient = db.find_one({'_id': ObjectId(IDPatient)})
-#         if not patient:
-#             return jsonify({'error': "Patient non trouvé"}), 404
-#         patient['_id'] = str(patient['_id'])  
-#         return jsonify(patient)
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
 
 @app.route('/patients/<IDPatient>', methods=['GET'])
 def get_patient(IDPatient):
     try:
-        # Recherche par champ personnalisé "IDPatient", pas par ObjectId
-        patient = db.find_one({'IDPatient': IDPatient})
+        patient = patients_collection.find_one({'IDPatient': IDPatient})
         if not patient:
             return jsonify({'error': "Patient non trouvé"}), 404
 
-        patient['_id'] = str(patient['_id'])  # Optionnel si tu veux garder l'ObjectId en string
+        patient['_id'] = str(patient['_id'])  
         return jsonify(patient)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-
 @app.route('/patients/<IDPatient>', methods=['DELETE'])
-def delete_patient(IDPatient):   # le parametre qu'on a passé dans l'url, c pour faciliter l'acces à  un tel patient on peut aussi ajouter exmpl /medicament pour lui dire d'ajouter un tel medic a un tel patient dans l'api route
+def delete_patient(IDPatient):
     try:
-        result = db.delete_one({'_id': ObjectId(IDPatient)})
+        result = patients_collection.delete_one({'_id': ObjectId(IDPatient)})
         if result.deleted_count == 0:
             return jsonify({'error': "Patient non trouvé"}), 404
         return jsonify({'msg': "Patient supprimé avec succès!"})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
-# @app.route('/patients/<IDPatient>', methods=['PUT'])
-# def update_patient(IDPatient):
-#     try:
-#         data = request.json
-#         if not data:
-#             return jsonify({'error': "Aucune donnée fournie"}), 400
-
-#         result = db.update_one({'_id': ObjectId(IDPatient)}, {'$set': data})
-#         if result.matched_count == 0:
-#             return jsonify({'error': "Patient non trouvé"}), 404
-#         return jsonify({'msg': "Patient modifié avec succès!"})
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
 
 from datetime import date
-
 @app.route('/ajouter_fiche', methods=['POST'])
 def ajouter_fiche():
     try:
         data = request.get_json()
         print(data)
+
+        if 'date_debut' not in data:
+            data['date_debut'] = date.today()
+
         fiche = FicheModel(**data)
-        print(fiche)
-        
-        # model dump au lieu de .dict --> serine adi lik
         fiche_dict = fiche.model_dump()
 
-        #format ISO desdates
         for field in ['date_debut', 'date_cloture']:
             if isinstance(fiche_dict.get(field), date):
                 fiche_dict[field] = fiche_dict[field].isoformat()
 
         mongo.db.ficheTraitement.insert_one(fiche_dict)
 
-        return jsonify({"message": "Fiche ajoutée avec succès"}), 201
+        update_result = mongo.db.patients.update_one(
+            {"IDPatient": fiche.IDPatient},  
+            {"$push": {"fiches": fiche.idfich}}
+        )
+
+        if update_result.modified_count == 0:
+            return jsonify({"warning": "Fiche ajoutée, mais patient non trouvé pour mise à jour."}), 201
+
+        return jsonify({"message": "Fiche ajoutée et liée au patient avec succès"}), 201
 
     except ValidationError as ve:
         return jsonify({"validation_error": ve.errors()}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/rendezvous', methods=['POST'])
+def create_rendezvous():
+    data = request.json
+    res = mongo.db.rendezvous.insert_one(data)
+    return jsonify({"message": "Rendez-vous créé", "id": str(res.inserted_id)}), 201
+
+@app.route('/consultations', methods=['POST'])
+def create_consultation():
+    data = request.json
+    res = mongo.db.consultations.insert_one(data)
+    return jsonify({"message": "Consultation créée", "id": str(res.inserted_id)}), 201
+
+
+@app.route('/effets-signales', methods=['POST'])
+def create_effet_signale():
+    data = request.json
+    res = mongo.db.effets_signales.insert_one(data)
+    return jsonify({"message": "Effet signalé enregistré", "id": str(res.inserted_id)}), 201
+
+
+@app.route('/sessions', methods=['POST'])
+def create_session():
+    try:
+        data = request.json
+        print(data)
+        session = SessionModel(**data)
+        print(data)
+
+        # 1️⃣ Gérer le rendez-vous séparément (liste de dates)
+        rendezVous_list = []
+        if session.rendezVous:
+           for date in session.rendezVous:
+               rdv_result = mongo.db.rendezvous.insert_one({"date": date})
+               rendezVous_list.append({
+                "_id": str(rdv_result.inserted_id),
+                "date": date  # garde la date ici
+        })
+
+        # 2️⃣ Gérer les consultations + effets signalés
+        consultation_ids = []
+        for consultation in session.consultationsControle:
+            effets_ids = []
+
+            for effet in consultation.effetsSignales or []:
+                effet_doc = effet.model_dump()
+                effet_insert = mongo.db.effets_signales.insert_one(effet_doc)
+                effets_ids.append(str(effet_insert.inserted_id))
+
+            consultation_doc = {
+                "dateVisite": consultation.dateVisite.isoformat(),
+                "effetsSignales": effets_ids
+            }
+            consult_insert = mongo.db.consultations.insert_one(consultation_doc)
+            consultation_ids.append(str(consult_insert.inserted_id))
+
+        # 3️⃣ Construire le document final de session
+        session_dict = session.model_dump()
+        session_dict["dateDebut"] = session.dateDebut.isoformat()
+        session_dict["dateFin"] = session.dateFin.isoformat() if session.dateFin else None
+        session_dict["consultationsControle"] = consultation_ids
+        # session_dict["rendezVous"] = rendezVous_ids
+        session_dict["rendezVous"] = rendezVous_list
+
+        # 4️⃣ Insérer la session
+        res = mongo.db.sessions.insert_one(session_dict)
+
+        return jsonify({
+            "message": "Session enregistrée",
+            "session_id": str(res.inserted_id)
+        }), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/sessions/<string:session_id>/cloturer', methods=['PUT'])
+def cloturer_session(session_id):
+    try:
+        result = mongo.db.sessions.update_one(
+            {"_id": ObjectId(session_id)},
+            {"$set": {"statut": False}}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"error": "Session non trouvée"}), 404
+            #sinon 
+        return jsonify({"message": "Session clôturée avec succès."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    
+@app.route("/sessions/fiche/<string:idfich>", methods=["GET"])
+def get_sessions_by_fiche(idfich):
+    try:
+        sessions = list(mongo.db.sessions.find({"idfich": idfich}))
+        for s in sessions:
+            s["_id"] = str(s["_id"])  # Convertir ObjectId pour JSON
+        return jsonify(sessions), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/patients/<IDPatient>/fiches', methods=['GET'])
+def get_fiches_by_patient(IDPatient):
+    try:
+        fiches = list(ficheTraitement.find({"IDPatient": IDPatient}))
+        for fiche in fiches:
+            fiche['_id'] = str(fiche['_id'])  # convertir ObjectId
+        return jsonify(fiches)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/fiches/<idfich>', methods=['GET'])
+def get_fiche(idfich):
+    try:
+        fiche = ficheTraitement.find_one({'idfich': idfich})
+        if not fiche:
+            return jsonify({'error': "Fiche non trouvée"}), 404
+
+        fiche['_id'] = str(fiche['_id'])
+        return jsonify(fiche)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/modifierfiches/<idfich>', methods=['PUT'])
 def modifier_fiche(idfich):
@@ -174,33 +322,7 @@ def modifier_fiche(idfich):
         return jsonify({"message": "Fiche modifiée avec succès"})
     except Exception as   e:   
               return jsonify({"error": str(e)}), 500
-@app.route('/fiches', methods=['GET'])
-def get_all_fiches():
-    ficheTraitement = list(mongo.db.ficheTraitement.find({}, {'_id': 0}))
-    return jsonify(ficheTraitement)
 
-@app.route('/fiche/<idfich>', methods=['GET'])
-def get_one_fiche(idfich):
-    fiche = mongo.db.ficheTraitement.find_one({"idfich": idfich}, {'_id': 0})
-    if fiche:
-        return jsonify(fiche)
-    else:
-        return jsonify({"error": "Fiche non trouvée"}), 404
-
-
-# @app.route('/fiche', methods =['POST'])
-# def creaction_fiche():
-# try:
-#         Data = request.get_json()
-#         fiche = FicheModel(**Data)
-#     except ValidationError as e:
-#             return jsonify({'error': e.errors()}) , 
-
-#      ficheDict = fiche.dict()
-#      fiche_collection = db["ficheTraitement"]
-#      Result = fiche_collection.insert_one(ficheDict)
-#      fiche_dict["_id"] = str(Result.inserted_id)
-#      return jsonify(ficheDict) , 201
 
 
 @app.route("/patients/<patient_id>/ficheTraitement/<fiche_id>/session", methods=["POST"]) 
@@ -216,7 +338,7 @@ def enregistrer_session(patient_id, fiche_id):
 
     # creation d'un objt pour MongoDB
 
-    session_data = Session.dict()
+    session_data = Session.model_dump()
     session_data["IDFiche"] = fiche_id  #c 2 ids sont pas du json envoye par le front c pour ca on fait ca
     session_data["IDPatient"] = patient_id
 
@@ -234,4 +356,12 @@ def enregistrer_session(patient_id, fiche_id):
     return jsonify({"message": "Session enregistrée avec succès"}), 201
 
 if __name__ == '__main__':
-    app.run(debug= True)
+    # Créer un médecin par défaut (à supprimer apres)
+    if not medecins_collection.find_one({"nom": "Toumi"}):
+        medecins_collection.insert_one({
+            "nom": "Toumi",
+            "mot_de_passe": generate_password_hash("motDePasse123")
+        })
+        print("Médecin par défaut créé")
+    
+    app.run(debug=True)
