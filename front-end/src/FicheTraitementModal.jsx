@@ -135,10 +135,15 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
       toast.error("Tous les champs doivent être remplis !");
       return;
     }
+     if (!patient || !patient._id) {
+    toast.error("Patient non chargé. Veuillez réessayer dans quelques secondes.");
+    return;
+  }
   
     const formData = {
       idfich: uuidv4(),
-      IDPatient: patient.IDPatient,
+      // IDPatient: patient.IDPatient,
+      IDPatient: patient._id,
       statut,
       categorie,
       preuve,

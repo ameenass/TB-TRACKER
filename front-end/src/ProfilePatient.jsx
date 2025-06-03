@@ -1593,7 +1593,7 @@ const handleSave = () => {
     sessionNumber: sessionCounter,
     daysCount: days,
     timestamp: Date.now(),
-    isActive: true // Nouvelle propriété
+    isActive: true 
   };
 
   // Désactiver l'ancienne session active s'il y en a une
@@ -1607,7 +1607,7 @@ const handleSave = () => {
   setActiveDaysCount(calculateActiveDaysCount(updated));
   setAgendaMonths(generateAgendaMonths(updated));
 
-  // Enregistrement temporaire
+  
   const sessionInfo = {
     traitement: selectedTreatment,
     dateDebut: start.toISOString(),

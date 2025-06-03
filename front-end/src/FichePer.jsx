@@ -83,7 +83,7 @@ function FichePer() {
         </h1>
         <div className="flex items-center mt-1 space-x-3">
           <span className="bg-white text-green-800 px-2 py-1 text-xs rounded-full">Création</span>
-          <span className="text-gray-600 text-sm">ID: {patient.IDPatient}</span>
+          
         </div>
       </div>
 

@@ -6,7 +6,7 @@ class AdresseListe(BaseModel):
      commune: Optional[str]
 
 class PatientModel(BaseModel):
-    IDPatient: str
+   # IDPatient: str
     nom: str
     prenom: str   #r"^[a-zA-ZéèêàçîïùâôÉÈÊÀÇÎÏÙÂÔ' -]+$"
     email: EmailStr
@@ -21,49 +21,8 @@ class PatientModel(BaseModel):
     
 
 class MedecinModel(BaseModel):
-    # nomMedecin: str = Field(..., min_length=1)
-    # prenomMedecin: str = Field(..., min_length=1)
-    # emailM: EmailStr
-    # numeroM: str = Field(..., min_length=10)
-    # adresseM: AdresseListe
     nom: str 
     mot_de_passe: str 
-
-
-
-# class SessionModel(BaseModel):
-#     date_debut: str
-#     date_fin: str
-#     statut: str
-#     Observation: str
-#     IDMedicament: str
-#     IDRendezvous: str
-
-# class EffetSignaleModel(BaseModel):
-#     idEffetSignale: str
-#     nom: str
-#     nbJours: int
-#     dateDebut: Optional[date]
-#     dateDeSignalement: Optional[date]
-
-# class ConsultationControleModel(BaseModel):
-#     dateVisite: date
-#     effetsSignales: Optional[List[EffetSignaleModel]] = []
-
-# class NoteModel(BaseModel):
-#     text: str
-#     date: str
-
-
-# class SessionModel(BaseModel):
-#     # idfich: str
-#     dateDebut: date
-#     dateFin: Optional[date]
-#     # statut: str
-#     notes: Optional[List[NoteModel]]
-#     rendezVous: Optional[str] = None
-#     consultationsControle: Optional[List[ConsultationControleModel]] = []
-#     traitement: Optional[str]
 
 class EffetSignaleModel(BaseModel):
     idEffetSignale: str
@@ -73,7 +32,7 @@ class EffetSignaleModel(BaseModel):
     dateDeSignalement: Optional[datetime  ]
 
 class ConsultationControleModel(BaseModel):
-    dateVisite: datetime  
+    # dateVisite: datetime  
     effetsSignales: Optional[List[EffetSignaleModel]] = []
 
 class NoteModel(BaseModel):
@@ -107,12 +66,10 @@ class FicheModel(BaseModel):
     poidsInitial: float
     note : Optional[str]
     contraception : bool
-     # date_debut: date    
-    # date_cloture: date
-    # LocalisationTB: str
-    def est_modifiable(self) -> bool:
-        """Retourne True si la fiche est encore modifiable"""
-        return self.date_cloture > date.today()
+
+    # def est_modifiable(self) -> bool:
+    #     """Retourne True si la fiche est encore modifiable"""
+    #     return self.date_cloture > date.today()
 
 
     class Config:

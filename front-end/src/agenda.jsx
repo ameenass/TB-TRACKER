@@ -1032,11 +1032,9 @@ function Agenda({
   const [contextMenuPosition, setContextMenuPosition] = useState(null); // Position du menu contextuel
   const [isSideEffectModalOpen, setIsSideEffectModalOpen] = useState(false); // etat du modal des effets secondaires
   
-  // Gestion des notes
   const [noteInputVisible, setNoteInputVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState([]);
-  
   
   const [rendezVousDates, setRendezVousDates] = useState([]);
   
@@ -1120,9 +1118,8 @@ function Agenda({
   }
 };
 
-  /**
-   * Ajoute une nouvelle session
-   */
+  //Ajoute une nouvelle session
+  
   const handleAddSession = () => {
   if (statut) {
     toast.warning('Une session est déjà en cours. Veuillez la clôturer avant d\'en créer une nouvelle.', {
@@ -1138,7 +1135,7 @@ function Agenda({
     return;
   }
   
-  // Réinitialisation des données
+ 
   setNotes([]);
   setRendezVousDates([]);
   setStatut(true);
@@ -1154,8 +1151,7 @@ function Agenda({
    * @param {Object} treatmentInfo - Informations sur le traitement ce jour-là
    */
   const handleDayClick = (day, treatmentInfo) => {
-    // Ne rien faire si session clôturée ou si le jour n'appartient pas à la session active
-    if (!statut || (treatmentInfo.hasTreatment && !treatmentInfo.isActive)) {
+    if (!statut || (treatmentInfo.hasTreatment && !treatmentInfo.isActive)) { // session cloturee ou pas de traitement
       return;
     }
 
@@ -1182,7 +1178,6 @@ function Agenda({
   const handleOptionClick = (action) => {
     if (!selectedDay) return;
 
-    // Initialisation de la plage pour la suspension
     if (action === "suspend") {
       setState([
         {
@@ -1193,12 +1188,11 @@ function Agenda({
       ]);
     }
 
-          if (action === "note") {
+  if (action === "note") {
   setNoteInputVisible(true);
   setContextMenuPosition(null);
    return;
  }
-    // Gestion des différentes actions
     switch(action) {
       case "side_effect":
         setIsSideEffectModalOpen(true);
@@ -1207,7 +1201,7 @@ function Agenda({
           
       case "rendez_vous":
         const dateStr = format(selectedDay.day, "yyyy-MM-dd");
-        if (!rendezVousDates.includes(dateStr)) {
+        if (!rendezVousDates.includes(dateStr)) {   // a faire plus tard si la date est deja presente
           setRendezVousDates((prev) => [...prev, dateStr]);
         }
         break;
@@ -1269,8 +1263,8 @@ function Agenda({
   const sessionTempData = localStorage.getItem("sessionTempData");
   if (!sessionTempData) return;
 
-  const session = JSON.parse(sessionTempData);
-  const idfich = localStorage.getItem("idfich");
+  const session = JSON.parse(sessionTempData);  //json parse txt json-->objt 
+  const idfich = localStorage.getItem("idfich");  //localst n'accepte que ca string
   const payload = {
     ...session,
     idfich,
@@ -1286,7 +1280,7 @@ function Agenda({
     const response = await fetch("http://localhost:5000/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload),   //objt-->json
     });
 
     const result = await response.json();
@@ -1295,14 +1289,39 @@ function Agenda({
 
     // Sauvegarde de l’ID de session pour pouvoir la clôturer plus tard
     localStorage.setItem("currentSessionId", result.session_id);
-    console.log("Session sauvegardée avec succès avec ID :", result.session_id);
+    toast.success("Session enregistrée avec succès !");
+    console.log("Session sauvegardee avec succes avec ID :", result.session_id);
 
     // Optionnel : tu peux garder sessionTempData ou le supprimer
     localStorage.removeItem("sessionTempData");
   } catch (error) {
     console.error("Erreur lors de l'envoi :", error);
+    toast.error("Une erreur est survenue : " + error.message);
   }
 };
+//this oneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+// useEffect(() => {
+//   const fetchSessions = async () => {
+//     const idfich = localStorage.getItem("idfich"); // ou une prop
+//     if (!idfich) return;
+
+//     try {
+//       const response = await fetch(`http://localhost:5000/sessions/fiche/${idfich}`);
+//       const data = await response.json();
+
+//       if (!response.ok) {
+//         throw new Error(data.error || "Erreur lors du chargement des sessions");
+//       }
+
+//       setSessions(data); // ou autre nom de ton state
+//     } catch (err) {
+//       console.error("Erreur en récupérant les sessions :", err.message);
+//     }
+//   };
+
+//   fetchSessions();
+// }, []);
+
 
 
   // ============ RENDU ============
@@ -1333,15 +1352,11 @@ function Agenda({
         
         {/* Boutons de gestion de session */}
         <div className="flex gap-2">
-         <button
-  onClick={handleAddSession}
-  className="text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-1"
-  style={{
-    backgroundColor: 'oklch(76.5% 0.177 163.223)','&:hover': {backgroundColor: 'oklch(55% 0.118 184.704)' 
-    }
-  }}
-><Plus size={18} />Session
-</button>
+         <button onClick={handleAddSession} className="text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-1"
+         style={{ backgroundColor: 'oklch(76.5% 0.177 163.223)','&:hover': {backgroundColor: 'oklch(55% 0.118 184.704)' }
+         }}
+         ><Plus size={18} />Session
+        </button>
           <button
             onClick={handleCloseSession}
             disabled={!statut}

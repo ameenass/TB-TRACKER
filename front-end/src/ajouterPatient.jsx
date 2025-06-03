@@ -108,7 +108,7 @@ const CustomFormField = ({
 }
 
 export default function Formulaire() {
-  const [IDPatient, setIDPatient] = useState("")
+  const [mot_de_passe, setIDPatient] = useState("")
   const [nom, setNom] = useState("")
   const [prenom, setPrenom] = useState("")
   const [email, setEmail] = useState("")
@@ -125,7 +125,7 @@ export default function Formulaire() {
     }
     
     const formData = {
-      IDPatient,
+      mot_de_passe,
       nom,
       prenom,
       email,
@@ -151,16 +151,18 @@ export default function Formulaire() {
         }
         return response.json();
       })
+      // a retirer 
       .then(data => {
-        // Met à jour le champ IDPatient avec la valeur retournée
-        setIDPatient(data.IDPatient);
+        setIDPatient(data.mot_de_passe);
   
     
         toast.success("Données enregistrées avec succès !");
-        toast.info(`Mot de passe du patient : ${data.IDPatient}`, {
+        toast.info(`Mot de passe du patient : ${data.mot_de_passe}`, {
           autoClose: false,
         });
-        console.log("Mot de passe généré :", data.IDPatient);
+
+        navigate(`/profile/${data.mot_de_passe}`);
+        console.log("Mot de passe généré :", data.mot_de_passe);
       })
       .catch(error => {
         toast.error("Une erreur est survenue : " + error.message);
@@ -193,7 +195,7 @@ export default function Formulaire() {
             placeholder="Nom"
             Icon={User}
           />
-          <input  type="text" name="IDPatient" value={IDPatient} readOnly placeholder="Mot de passe généré" className="form-control"/>
+          <input  type="text" name="IDPatient" value={mot_de_passe} readOnly placeholder="Mot de passe généré" className="form-control"/>
           
           <CustomFormField
             label="Prénom"
