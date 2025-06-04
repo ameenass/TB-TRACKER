@@ -123,9 +123,7 @@ export default function Formulaire() {
       toast.error("Tous les champs doivent être remplis !")
       return
     }
-    
-    const formData = {
-      IDPatient,
+      const formData = {
       nom,
       prenom,
       email,

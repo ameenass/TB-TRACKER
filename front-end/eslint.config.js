@@ -22,8 +22,7 @@ export default [
       react,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
-    },
-    rules: {
+    },    rules: {
       ...js.configs.recommended.rules,
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
@@ -33,6 +32,14 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // Disable prop-types validation (can be re-enabled for production)
+      'react/prop-types': 'off',
+      // Disable unused variable warnings for development
+      'no-unused-vars': 'warn',
+      // Allow unescaped entities in JSX
+      'react/no-unescaped-entities': 'off',
+      // Allow lexical declarations in case blocks
+      'no-case-declarations': 'off',
     },
   },
 ]

@@ -1514,12 +1514,72 @@ function ProfilePatient() {
     setSelectedSession(sessionInfo);
     setIsModalOpen(true);
   };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setModalMode("add");
     setSelectedSession(null);
     setDeletionNote("");
+  };
+  // Function to handle session closure
+  const handleSessionClosed = (sessionId) => {
+    console.log("Session closed, updating treatments:", sessionId);
+    
+    // Update treatments to mark the closed session as inactive
+    const updatedTreatments = treatments.map(treatment => {
+      // Find the treatment that corresponds to this session
+      // We'll update based on the active status since we don't store sessionId in treatments
+      if (treatment.isActive) {
+        return {
+          ...treatment,
+          isActive: false,
+          isClosed: true
+        };
+      }
+      return treatment;
+    });
+    
+    setTreatments(updatedTreatments);
+    console.log("Treatments updated after session closure");
+  };
+
+  // Function to handle sessions fetched from backend
+  const handleSessionsFetched = (sessionsData) => {
+    console.log("Converting sessions to treatments:", sessionsData);
+    
+    const convertedTreatments = sessionsData.map((session, index) => {
+      const startDate = new Date(session.dateDebut);
+      const endDate = new Date(session.dateFin);
+      const days = [];
+      
+      // Generate array of dates from start to end
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+      
+      return {
+        dates: days,
+        treatment: session.traitement,
+        color: treatmentColors[session.traitement] || "#90cdf4",
+        sessionNumber: session.sessionNumber || (index + 1),
+        daysCount: days.length,
+        timestamp: new Date(session.dateDebut).getTime(),
+        isActive: session.statut === true, // Preserve the actual session status
+        isClosed: session.statut === false // Add a flag to track closed sessions
+      };
+    });
+    
+    console.log("Converted treatments:", convertedTreatments);
+    
+    setTreatments(convertedTreatments);
+    setTreatmentBoundaries(calculateTreatmentBoundaries(convertedTreatments));
+    setActiveDaysCount(calculateActiveDaysCount(convertedTreatments));
+    setAgendaMonths(generateAgendaMonths(convertedTreatments));
+    
+    // Update session counter to continue from the last session
+    if (convertedTreatments.length > 0) {
+      const maxSessionNumber = Math.max(...convertedTreatments.map(t => t.sessionNumber || 0));
+      setSessionCounter(maxSessionNumber + 1);
+    }
   };
 
   const calculateTreatmentBoundaries = (list) => {
@@ -1593,12 +1653,12 @@ const handleSave = () => {
     sessionNumber: sessionCounter,
     daysCount: days,
     timestamp: Date.now(),
-    isActive: true // Nouvelle propriété
+    isActive: true // New session is active
   };
 
-  // Désactiver l'ancienne session active s'il y en a une
-  const updated = treatments.map(t => ({ ...t, isActive: false }));
-  updated.push(newTreatment);
+  // Keep all existing treatments but add the new one
+  // Don't modify existing treatments' isActive status here
+  const updated = [...treatments, newTreatment];
   
   setTreatments(updated);
   setActiveSessionNumber(sessionCounter);
@@ -1655,9 +1715,7 @@ const handleSave = () => {
     setActiveDaysCount(calculateActiveDaysCount(updated));
     setAgendaMonths(generateAgendaMonths(updated));
     closeModal();
-  };
-
-  const getTreatmentInfo = (date) => {
+  };  const getTreatmentInfo = (date, specificSessionNumber = null) => {
     if (treatmentBoundaries.earliestDate && treatmentBoundaries.latestDate) {
       if (isBefore(date, treatmentBoundaries.earliestDate) || isAfter(date, treatmentBoundaries.latestDate)) {
         return { hasTreatment: false, isOutsideTreatmentPeriod: true };
@@ -1666,6 +1724,31 @@ const handleSave = () => {
 
     const matches = treatments.filter((t) => t.dates.some((d) => isSameDay(d, date)));
     if (matches.length > 0) {
+      // If a specific session is requested (for row-based display), return that session's info
+      if (specificSessionNumber !== null) {
+        const sessionMatch = matches.find(t => t.sessionNumber === specificSessionNumber);
+        if (sessionMatch) {
+          return {
+            hasTreatment: true,
+            color: sessionMatch.color,
+            name: `Session ${sessionMatch.sessionNumber}`,
+            daysCount: sessionMatch.daysCount,
+            isOutsideTreatmentPeriod: false,
+            sessionNumber: sessionMatch.sessionNumber,
+            treatment: sessionMatch.treatment,
+            hasOverlap: matches.length > 1,
+            isOverridden: false, // Never override in session-specific view
+            overriddenSessionNumber: null,
+            allTreatments: matches,
+            isActive: sessionMatch.isActive,
+            isClosed: sessionMatch.isClosed || false
+          };
+        } else {
+          return { hasTreatment: false, isOutsideTreatmentPeriod: false };
+        }
+      }
+
+      // For global view (context menu, etc.), use the most recent session
       matches.sort((a, b) => b.timestamp - a.timestamp);
       const recent = matches[0];
       const isOverridden = matches.length > 1 && recent.timestamp > matches[1].timestamp;
@@ -1681,7 +1764,8 @@ const handleSave = () => {
         isOverridden,
         overriddenSessionNumber: isOverridden ? matches[1].sessionNumber : null,
         allTreatments: matches,
-        isActive: recent.isActive 
+        isActive: recent.isActive,
+        isClosed: recent.isClosed || false
       };
     }
 
@@ -1820,9 +1904,7 @@ const handleSave = () => {
 
               
           </div>
-        </div>
-
-        {/* RIGHT AGENDA PANEL */}
+        </div>        {/* RIGHT AGENDA PANEL */}
         <Agenda  
           treatments={treatments}
           activeDaysCount={activeDaysCount}
@@ -1832,6 +1914,8 @@ const handleSave = () => {
           openModal={openModal}
           showInfoTooltip={showInfoTooltip}
           setShowInfoTooltip={setShowInfoTooltip}
+          onSessionsFetched={handleSessionsFetched}
+          onSessionClosed={handleSessionClosed}
         />
       </div>
 
