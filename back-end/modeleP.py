@@ -1,6 +1,7 @@
 from typing import  Optional , List 
 from pydantic import BaseModel,EmailStr , Field
-from datetime import date , datetime  
+from datetime import date , datetime 
+ 
 class AdresseListe(BaseModel):
      wilaya: Optional[str]
      commune: Optional[str]

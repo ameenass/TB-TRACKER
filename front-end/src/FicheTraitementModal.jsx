@@ -117,33 +117,35 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
   const [patient, setPatient] = useState(null);
 
   const { id } = useParams();
-  
-  useEffect(() => {
+    useEffect(() => {
+    console.log("🔍 FicheTraitementModal - ID from useParams:", id);
     fetch(`http://localhost:5000/patients/${id}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log("Patient récupéré:", data);
+        console.log("🔍 FicheTraitementModal - Patient récupéré:", data);
+        console.log("🔍 FicheTraitementModal - Patient IDPatient field:", data.IDPatient);
+        console.log("🔍 FicheTraitementModal - Patient keys:", Object.keys(data));
         setPatient(data);
       })
       .catch((error) => {
-        console.error("Erreur lors de la récupération du patient", error);
+        console.error("❌ FicheTraitementModal - Erreur lors de la récupération du patient", error);
       });
   }, [id]);
-
   const handleEnregistrer = async () => {
     if (!poidsInitial || !categorie || !selectedSousType || !Comptage_tuberculeux ) {
       toast.error("Tous les champs doivent être remplis !");
       return;
     }
-     if (!patient || !patient._id) {
-    toast.error("Patient non chargé. Veuillez réessayer dans quelques secondes.");
-    return;
-  }
+
+
+    console.log("🔍 FicheTraitementModal - Patient object:", patient);
+    console.log("🔍 FicheTraitementModal - patient.IDPatient:", patient?.IDPatient);
+    console.log("🔍 FicheTraitementModal - ID from useParams (should be IDPatient):", id);
   
     const formData = {
       idfich: uuidv4(),
-      // IDPatient: patient.IDPatient,
-      IDPatient: patient._id,
+      IDPatient: patient?.IDPatient || id, // Use patient.IDPatient if available, otherwise use id from URL
+
       statut,
       categorie,
       preuve,
@@ -155,21 +157,30 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
       contraception,
     };
 
+    console.log("🔍 FicheTraitementModal - FormData being sent:", formData);
+    console.log("🔍 FicheTraitementModal - FormData IDPatient:", formData.IDPatient);
+
     try {
       console.log("FormData sent to backend:", formData);
       const response = await fetch('http://localhost:5000/ajouter_fiche', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
       });
       if (response.ok) {
-        const data = await response.json();
-        toast.success("Données enregistrées avec succès !");
+      const data = await response.json();
+      toast.success("Données enregistrées avec succès !", {
+        position: "bottom-right"
+      });
       } else {
-        toast.error("Erreur lors de l'enregistrement des données.");
+      toast.error("Erreur lors de l'enregistrement des données.", {
+        position: "bottom-right"
+      });
       }
     } catch (error) {
-      toast.error("Une erreur est survenue : " + error.message);
+      toast.error("Une erreur est survenue : " + error.message, {
+      position: "bottom-right"
+      });
     }
   };
 

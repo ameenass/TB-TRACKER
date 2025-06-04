@@ -7,7 +7,6 @@ import SearchPatient from './SearchPatient.jsx';
 import Home from './Home.jsx';
 import FichePer from './FichePer.jsx';
 import ProfilePatient from './ProfilePatient.jsx';
-import InscriptionMedecin from './InscriptionMedecin.jsx';
 import ConnexionMedecin from './InscriptionMedecin.jsx';
 import Protection from "./Protection.jsx";
 

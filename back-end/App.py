@@ -23,8 +23,21 @@ app.config['JWT_SECRET_KEY'] = cle_secrete
 #app.config['JWT_SECRET_KEY'] = 'TaCléSecrète'  
 jwt = JWTManager(app)  
 
-app.config["MONGO_URI"] = "mongodb://localhost:27017/tb_tracker"
+# app.config["MONGO_URI"] = "mongodb://localhost:27017/tb_tracker"
+app.config["MONGO_URI"] = "mongodb+srv://msideneche:mohamed2003@cluster0.tjadpy9.mongodb.net/TBTracker"
 mongo = PyMongo(app)
+
+# Test database connection
+def test_database_connection():
+    try:
+        # Test the connection by attempting to access the database
+        mongo.db.command('ping')
+        print("✅ Database connection successful!")
+        print(f"📊 Connected to database: {mongo.db.name}")
+        return True
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        return False
 
 
 SWAGGER_URL = '/swagger'
@@ -57,6 +70,7 @@ def add_patient():
         mdp_genere = ''.join(secrets.choice(alphabet) for _ in range(6))
         hashed_mdp = generate_password_hash(mdp_genere) # on le hache avant de l'utiliser non lisible
         data['mot_de_passe'] = hashed_mdp
+        data['IDPatient'] = mdp_genere  # Set the plain text password as IDPatient for searching
 
         patient = PatientModel(**data)
 
@@ -150,6 +164,63 @@ def login_medecin():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
+
+@app.route('/patients', methods=['GET'])
+def get_patients():
+    try:
+        patients = []
+        for doc in patients_collection.find():
+            doc['_id'] = str(doc['_id'])  
+            patients.append(doc)
+        return jsonify(patients)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/patients/<IDPatient>', methods=['GET'])
+def get_patient(IDPatient):
+    try:
+        print(f"🔍 Looking for patient with IDPatient: {IDPatient}")
+        
+        # First try to find by IDPatient field
+        patient = patients_collection.find_one({'IDPatient': IDPatient})
+        print(f"🔍 Search by IDPatient field result: {patient is not None}")
+        
+        # If not found, try to find by _id (in case ObjectId is passed)
+        if not patient:
+            try:
+                if ObjectId.is_valid(IDPatient):
+                    print(f"🔍 Trying search by ObjectId: {IDPatient}")
+                    patient = patients_collection.find_one({'_id': ObjectId(IDPatient)})
+                    print(f"🔍 Search by ObjectId result: {patient is not None}")
+            except Exception as e:
+                print(f"⚠️ Error trying ObjectId search: {e}")
+        
+        if not patient:
+            print(f"❌ Patient not found with IDPatient: {IDPatient}")
+            # Let's also check what patients exist in the database
+            all_patients = list(patients_collection.find({}, {'IDPatient': 1, 'nom': 1, 'prenom': 1}))
+            print(f"📋 Available patients in database: {all_patients}")
+            return jsonify({'error': "Patient non trouvé"}), 404
+
+        patient['_id'] = str(patient['_id'])  
+        print(f"✅ Patient found: {patient.get('nom', 'N/A')} {patient.get('prenom', 'N/A')}")
+        return jsonify(patient)
+    except Exception as e:
+        print(f"❌ Error in get_patient: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/patients/<IDPatient>', methods=['DELETE'])
+def delete_patient(IDPatient):
+    try:
+        result = patients_collection.delete_one({'_id': ObjectId(IDPatient)})
+        if result.deleted_count == 0:
+            return jsonify({'error': "Patient non trouvé"}), 404
+        return jsonify({'msg': "Patient supprimé avec succès!"})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 from datetime import date
@@ -328,11 +399,15 @@ def cloturer_session(session_id):
 @app.route("/sessions/fiche/<string:idfich>", methods=["GET"])
 def get_sessions_by_fiche(idfich):
     try:
+        print(f"🔍 Searching for sessions with idfich: {idfich}")
         sessions = list(mongo.db.sessions.find({"idfich": idfich}))
+        print(f"📊 Found {len(sessions)} sessions")
         for s in sessions:
+            print(f"   Session: {s['_id']} - Status: {s.get('statut', 'N/A')}")
             s["_id"] = str(s["_id"])  # Convertir ObjectId pour JSON
         return jsonify(sessions), 200
     except Exception as e:
+        print(f"❌ Error in get_sessions_by_fiche: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -349,10 +424,15 @@ def get_fiches_by_patient(IDPatient):
 @app.route('/fiches/<idfich>', methods=['GET'])
 def get_fiche(idfich):
     try:
+        print(f"🔍 Looking for fiche with idfich: {idfich}")
         fiche = ficheTraitement.find_one({'idfich': idfich})
         if not fiche:
+            print(f"❌ Fiche not found with idfich: {idfich}")
             return jsonify({'error': "Fiche non trouvée"}), 404
 
+        print(f"✅ Fiche found: {fiche.get('idfich', 'N/A')}")
+        print(f"📋 Fiche IDPatient: {fiche.get('IDPatient', 'N/A')}")
+        
         fiche['_id'] = str(fiche['_id'])
         return jsonify(fiche)
     except Exception as e:
@@ -411,12 +491,35 @@ def enregistrer_session(patient_id, fiche_id):
     return jsonify({"message": "Session enregistrée avec succès"}), 201
 
 if __name__ == '__main__':
+    print("🚀 Starting TB Tracker Server...")
+    print("=" * 50)
+    
+    # Test database connection
+    if test_database_connection():
+        try:
+            # List collections to show database info
+            collections = mongo.db.list_collection_names()
+            print(f"📁 Available collections: {collections}")
+        except Exception as e:
+            print(f"⚠️  Warning: Could not list collections: {e}")
+    
     # Créer un médecin par défaut (à supprimer apres)
-    if not medecins_collection.find_one({"nom": "Toumi"}):
-        medecins_collection.insert_one({
-            "nom": "Toumi",
-            "mot_de_passe": generate_password_hash("motDePasse123")
-        })
-        print("Médecin par défaut créé")
+    try:
+        if not medecins_collection.find_one({"nom": "Toumi"}):
+            medecins_collection.insert_one({
+                "nom": "Toumi",
+                "mot_de_passe": generate_password_hash("motDePasse123")
+            })
+            print("👨‍⚕️ Médecin par défaut créé")
+        else:
+            print("👨‍⚕️ Médecin par défaut déjà existant")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not create/check default doctor: {e}")
+    
+    print("=" * 50)
+    print("🌐 Server is starting on http://localhost:5000")
+    print("📚 Swagger API documentation available at: http://localhost:5000/swagger")
+    print("🐛 Debug mode: ON")
+    print("=" * 50)
     
     app.run(debug=True)
