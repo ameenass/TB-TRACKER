@@ -1466,7 +1466,7 @@ import {
   getYear,
 } from "date-fns";
 import { fr } from "date-fns/locale";
-import Agenda from "./Agenda";
+import Agenda from "./agenda";
 import SessionCreationModal from "./SessionCreationModal";
 
 function ProfilePatient() {
