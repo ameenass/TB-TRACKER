@@ -1667,7 +1667,7 @@ const handleSave = () => {
   setActiveDaysCount(calculateActiveDaysCount(updated));
   setAgendaMonths(generateAgendaMonths(updated));
 
-  // Enregistrement temporaire
+  
   const sessionInfo = {
     traitement: selectedTreatment,
     dateDebut: start.toISOString(),

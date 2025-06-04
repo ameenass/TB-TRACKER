@@ -196,16 +196,27 @@ function SearchPatient() {
   }, [])
 
   const filteredPatients = searchTerm
-    ? patients.filter((patient) => {
-        const fullName = `${patient.nom?.toLowerCase()} ${patient.prenom?.toLowerCase()}`
-        return (
-          fullName.includes(searchTerm.toLowerCase()) ||
-          patient._id?.toString().includes(searchTerm) ||
-          patient.adresse?.wilaya?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.adresse?.commune?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      })
-    : patients
+  ? patients.filter((patient) => {
+      const formattedDate = new Date(patient.DateNaissance)?.toISOString().slice(0, 10); // "YYYY-MM-DD"
+      return (
+        patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        formattedDate?.includes(searchTerm)
+      );
+    })
+  : patients;
+
+
+  // const filteredPatients = searchTerm
+  //   ? patients.filter((patient) => {
+  //       const fullName = `${patient.nom?.toLowerCase()} ${patient.prenom?.toLowerCase()}`
+  //       return (
+  //         fullName.includes(searchTerm.toLowerCase()) ||
+  //         patient._id?.toString().includes(searchTerm) ||
+  //         patient.adresse?.wilaya?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //         patient.adresse?.commune?.toLowerCase().includes(searchTerm.toLowerCase())
+  //       )
+  //     })
+  //   : patients
 
   const getInitials = (nom, prenom) => `${prenom?.[0] || ""}${nom?.[0] || ""}`.toUpperCase()
 
@@ -254,7 +265,7 @@ function SearchPatient() {
 
           <input
             type="text"
-            placeholder="Rechercher un patient par nom, prenom, ou ID ..."
+            placeholder="Rechercher un patient par date de naissance YYYY-MM-DD ou email"
             className="w-full p-3 text-md font-medium focus:outline-none rounded-full bg-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -361,9 +372,9 @@ function SearchPatient() {
 
                 {/* Card Footer */}
                 <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    Dernière visite: {/*{patient.lastVisit || "Non renseignée"}*/}
-                  </span>
+                  {/* <span className="text-xs text-gray-500">
+                    Dernière visite: {/*{patient.lastVisit || "Non renseignée"}
+                  </span> */}
                   <Link
                     to={`/profile/${patient.IDPatient || patient._id}`}
                     className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors flex items-center"

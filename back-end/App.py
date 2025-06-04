@@ -87,11 +87,54 @@ def add_patient():
         return jsonify({
             'id': str(result.inserted_id),
             'msg': "Patient ajouté avec succès!",
-            'IDPatient': mdp_genere  # On retourne le mot de passe généré pour l'informer
+            'mot_de_passe': mdp_genere
         }), 201
+        
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/patients', methods=['GET'])
+def get_patients():
+    try:
+        patients = []
+        for doc in patients_collection.find():
+            doc['_id'] = str(doc['_id'])  
+            patients.append(doc)
+        return jsonify(patients)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+# @app.route('/patients/<IDPatient>', methods=['GET'])
+# def get_patient(IDPatient):
+#     try:
+#         patient = patients_collection.find_one({'IDPatient': IDPatient})
+#         if not patient:
+#             return jsonify({'error': "Patient non trouvé"}), 404
+
+#         patient['_id'] = str(patient['_id'])  
+#         return jsonify(patient)
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
+    
+from bson import ObjectId
+
+@app.route('/patients/<id>', methods=['GET'])
+def get_patient(id):
+    try:
+        patient = patients_collection.find_one({'_id': ObjectId(id)})
+        if not patient:
+            return jsonify({'error': "Patient non trouvé"}), 404
+
+        patient['_id'] = str(patient['_id'])  # Convertir pour JSON
+        return jsonify(patient)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/login', methods=['POST'])
 def login_medecin():
@@ -179,26 +222,70 @@ def delete_patient(IDPatient):
         return jsonify({'error': str(e)}), 500
 
 from datetime import date
+# @app.route('/ajouter_fiche', methods=['POST'])
+# def ajouter_fiche():
+#     try:
+#         data = request.get_json()
+#         print(data)
+
+#         if 'date_debut' not in data:
+#             data['date_debut'] = date.today()
+
+#         fiche = FicheModel(**data)
+#         fiche_dict = fiche.model_dump()
+
+#         for field in ['date_debut', 'date_cloture']:
+#             if isinstance(fiche_dict.get(field), date):
+#                 fiche_dict[field] = fiche_dict[field].isoformat()
+
+#         mongo.db.ficheTraitement.insert_one(fiche_dict)
+
+#         update_result = mongo.db.patients.update_one(
+#             {"IDPatient": fiche.IDPatient},  
+#             {"$push": {"fiches": fiche.idfich}}
+#         )
+
+#         if update_result.modified_count == 0:
+#             return jsonify({"warning": "Fiche ajoutée, mais patient non trouvé pour mise à jour."}), 201
+
+#         return jsonify({"message": "Fiche ajoutée et liée au patient avec succès"}), 201
+
+#     except ValidationError as ve:
+#         return jsonify({"validation_error": ve.errors()}), 400
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
 @app.route('/ajouter_fiche', methods=['POST'])
 def ajouter_fiche():
     try:
         data = request.get_json()
         print(data)
 
+        # ✅ Conversion IDPatient (string venant du frontend) en ObjectId
+        if 'IDPatient' in data:
+            data['IDPatient'] = ObjectId(data['IDPatient'])
+
         if 'date_debut' not in data:
             data['date_debut'] = date.today()
 
+        # ✅ Création Pydantic
         fiche = FicheModel(**data)
         fiche_dict = fiche.model_dump()
+        
 
+        # ✅ Conversion des dates
         for field in ['date_debut', 'date_cloture']:
             if isinstance(fiche_dict.get(field), date):
                 fiche_dict[field] = fiche_dict[field].isoformat()
 
+        # ✅ Insertion dans MongoDB
         mongo.db.ficheTraitement.insert_one(fiche_dict)
-
+        
+        # ✅ Mise à jour du patient avec l'ObjectId
         update_result = mongo.db.patients.update_one(
-            {"IDPatient": fiche.IDPatient},  
+            {"_id": fiche.IDPatient},  # 👈 on utilise _id ici, pas "IDPatient"
             {"$push": {"fiches": fiche.idfich}}
         )
 
@@ -243,17 +330,18 @@ def create_session():
         session = SessionModel(**data)
         print(data)
 
-        # 1️⃣ Gérer le rendez-vous séparément (liste de dates)
+        
         rendezVous_list = []
         if session.rendezVous:
            for date in session.rendezVous:
                rdv_result = mongo.db.rendezvous.insert_one({"date": date})
                rendezVous_list.append({
                 "_id": str(rdv_result.inserted_id),
-                "date": date  # garde la date ici
+                "date": date  
         })
+        # print("Consultations recues:", session.consultationsControle)
 
-        # 2️⃣ Gérer les consultations + effets signalés
+       
         consultation_ids = []
         for consultation in session.consultationsControle:
             effets_ids = []
@@ -269,8 +357,9 @@ def create_session():
             }
             consult_insert = mongo.db.consultations.insert_one(consultation_doc)
             consultation_ids.append(str(consult_insert.inserted_id))
+            # print("Ids des consultations :", consultation_ids)
 
-        # 3️⃣ Construire le document final de session
+        
         session_dict = session.model_dump()
         session_dict["dateDebut"] = session.dateDebut.isoformat()
         session_dict["dateFin"] = session.dateFin.isoformat() if session.dateFin else None
@@ -278,7 +367,7 @@ def create_session():
         # session_dict["rendezVous"] = rendezVous_ids
         session_dict["rendezVous"] = rendezVous_list
 
-        # 4️⃣ Insérer la session
+        
         res = mongo.db.sessions.insert_one(session_dict)
 
         return jsonify({

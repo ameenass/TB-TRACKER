@@ -36,7 +36,6 @@ function Agenda({
   const [contextMenuPosition, setContextMenuPosition] = useState(null); // Position du menu contextuel
   const [isSideEffectModalOpen, setIsSideEffectModalOpen] = useState(false); // etat du modal des effets secondaires
   
-  // Gestion des notes
   const [noteInputVisible, setNoteInputVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState([]);
@@ -163,9 +162,8 @@ function Agenda({
   }
 };
 
-  /**
-   * Ajoute une nouvelle session
-   */
+  //Ajoute une nouvelle session
+  
   const handleAddSession = () => {
   if (statut) {
     toast.warning('Une session est déjà en cours. Veuillez la clôturer avant d\'en créer une nouvelle.', {
@@ -181,7 +179,7 @@ function Agenda({
     return;
   }
   
-  // Réinitialisation des données
+ 
   setNotes([]);
   setRendezVousDates([]);
   setStatut(true);
@@ -274,7 +272,6 @@ function Agenda({
   const handleOptionClick = (action) => {
     if (!selectedDay) return;
 
-    // Initialisation de la plage pour la suspension
     if (action === "suspend") {
       setState([
         {
@@ -285,12 +282,11 @@ function Agenda({
       ]);
     }
 
-          if (action === "note") {
+  if (action === "note") {
   setNoteInputVisible(true);
   setContextMenuPosition(null);
    return;
  }
-    // Gestion des différentes actions
     switch(action) {
       case "side_effect":
         setIsSideEffectModalOpen(true);
@@ -299,7 +295,7 @@ function Agenda({
           
       case "rendez_vous":
         const dateStr = format(selectedDay.day, "yyyy-MM-dd");
-        if (!rendezVousDates.includes(dateStr)) {
+        if (!rendezVousDates.includes(dateStr)) {   // a faire plus tard si la date est deja presente
           setRendezVousDates((prev) => [...prev, dateStr]);
         }
         break;
@@ -379,7 +375,7 @@ function Agenda({
     const response = await fetch("http://localhost:5000/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload),   //objt-->json
     });
 
     const result = await response.json();
@@ -411,6 +407,29 @@ function Agenda({
     });
   }
 };
+//this oneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+// useEffect(() => {
+//   const fetchSessions = async () => {
+//     const idfich = localStorage.getItem("idfich"); // ou une prop
+//     if (!idfich) return;
+
+//     try {
+//       const response = await fetch(`http://localhost:5000/sessions/fiche/${idfich}`);
+//       const data = await response.json();
+
+//       if (!response.ok) {
+//         throw new Error(data.error || "Erreur lors du chargement des sessions");
+//       }
+
+//       setSessions(data); // ou autre nom de ton state
+//     } catch (err) {
+//       console.error("Erreur en récupérant les sessions :", err.message);
+//     }
+//   };
+
+//   fetchSessions();
+// }, []);
+
 
 
   // ============ RENDU ============
