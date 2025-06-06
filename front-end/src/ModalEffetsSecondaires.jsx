@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState } from "react"
+import { X } from "lucide-react"
 
 function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
-  const [isPeriod, setIsPeriod] = useState(false);
-  const [startDate, setStartDate] = useState(selectedDay?.day || new Date());
-  const [endDate, setEndDate] = useState(null);
-  const [selectedEffects, setSelectedEffects] = useState([]);
+  const [isPeriod, setIsPeriod] = useState(false)
+  const [startDate, setStartDate] = useState(selectedDay?.day || new Date())
+  const [endDate, setEndDate] = useState(null)
+  const [selectedEffects, setSelectedEffects] = useState([])
 
   const allEffects = [
     { id: "1", nom: "Nausées" },
@@ -26,60 +26,45 @@ function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
     { id: "16", nom: "Névrite optique" },
     { id: "17", nom: "Épilepsie" },
     { id: "18", nom: "Anurie" },
-  ];
+  ]
 
-  if (!open) return null;
+  if (!open) return null
 
   const handleSelectEffect = (effet) => {
     if (!selectedEffects.find((e) => e.id === effet.id)) {
-      setSelectedEffects([...selectedEffects, effet]);
+      setSelectedEffects([...selectedEffects, effet])
     }
-  };
+  }
 
   const handleRemoveEffect = (effet) => {
-    setSelectedEffects(selectedEffects.filter((e) => e.id !== effet.id));
-  };
+    setSelectedEffects(selectedEffects.filter((e) => e.id !== effet.id))
+  }
 
-  const handleSubmit = async () => {
-    const dateSignalement = new Date();
+  const handleSubmit = () => {
+    const dateSignalement = new Date()
 
     const effetsSignales = selectedEffects.map((effet) => ({
       idEffetSignale: effet.id,
       nom: effet.nom,
-      nbJours: isPeriod && endDate   //en mode periode ,end date--> y a une periode
-        ? Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1
-        : 1,
-      dateDebut: startDate.toISOString().split("T")[0],  // "2025-06-02T14:30:00.000Z"  [2025-06-02 , 14:30:00.000Z]
+      nbJours:
+        isPeriod && endDate ? Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1 : 1,
+      dateDebut: startDate.toISOString().split("T")[0],
       dateDeSignalement: dateSignalement.toISOString().split("T")[0],
-    }));
+    }))
 
-    const payload = {
-      // dateVisite: dateSignalement.toISOString().split("T")[0],
+    const effects = {
       effetsSignales: effetsSignales,
-    };
-
-    try {
-      const response = await fetch("http://localhost:5000/effets-signales", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erreur serveur : ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Réponse du backend :", data);
-
-      if (onSubmit) onSubmit(); // recharger l'interface
-      setOpenModal(false);
-    } catch (error) {
-      console.error("Erreur lors de l’envoi :", error);
     }
-  };
+
+    console.log("Effets secondaires à envoyer:", effects)
+
+    // Utiliser le callback onSubmit pour passer les données à agenda.jsx
+    if (onSubmit) {
+      onSubmit(effects)
+    }
+
+    setOpenModal(false)
+  }
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex justify-center items-center">
@@ -91,29 +76,17 @@ function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">
-          Signaler un effet secondaire
-        </h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">Signaler un effet secondaire</h2>
 
         {/* Choix jour ou période */}
         <div className="mb-4">
           <label className="mr-4">
-            <input
-              type="radio"
-              name="mode"
-              checked={!isPeriod}
-              onChange={() => setIsPeriod(false)}
-            />{" "}
-            Effet sur un seul jour
+            <input type="radio" name="mode" checked={!isPeriod} onChange={() => setIsPeriod(false)} /> Effet sur un seul
+            jour
           </label>
           <label>
-            <input
-              type="radio"
-              name="mode"
-              checked={isPeriod}
-              onChange={() => setIsPeriod(true)}
-            />{" "}
-            Effet sur une période
+            <input type="radio" name="mode" checked={isPeriod} onChange={() => setIsPeriod(true)} /> Effet sur une
+            période
           </label>
         </div>
 
@@ -141,16 +114,14 @@ function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
           )}
         </div>
 
-        {/* Liste d’effets secondaires */}
+        {/* Liste d'effets secondaires */}
         <h3 className="text-md font-semibold mb-2 text-gray-600">Effets observés :</h3>
         <ul className="grid grid-cols-2 gap-2 mb-4">
           {allEffects.map((effet) => (
             <li
               key={effet.id}
               className={`cursor-pointer px-3 py-2 rounded border ${
-                selectedEffects.find((e) => e.id === effet.id)
-                  ? "bg-teal-500 text-white"
-                  : "hover:bg-gray-100"
+                selectedEffects.find((e) => e.id === effet.id) ? "bg-teal-500 text-white" : "hover:bg-gray-100"
               }`}
               onClick={() => handleSelectEffect(effet)}
             >
@@ -162,10 +133,7 @@ function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
         {/* Effets sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
           {selectedEffects.map((effet) => (
-            <span
-              key={effet.id}
-              className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full flex items-center gap-2"
-            >
+            <span key={effet.id} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full flex items-center gap-2">
               {effet.nom}
               <button onClick={() => handleRemoveEffect(effet)}>
                 <X size={14} />
@@ -185,7 +153,7 @@ function ModalEffetsSecondaires({ open, setOpenModal, selectedDay, onSubmit }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default ModalEffetsSecondaires;
+export default ModalEffetsSecondaires

@@ -1,259 +1,324 @@
-import { Info, Plus, AlertCircle, PauseCircle, StickyNote, CalendarPlus, ChevronDown, ChevronRight } from "lucide-react";
-import { format, isSameDay, getDay } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useRef, useState, useEffect } from "react";
-import ModalEffetsSecondaires from "./ModalEffetsSecondaires";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer } from 'react-toastify';
-import { useParams } from "react-router-dom";
+import { Info, Plus, AlertCircle, PauseCircle, StickyNote, CalendarPlus } from "lucide-react"
+import { format, isSameDay, getDay, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns"
+import { fr } from "date-fns/locale"
+import { useRef, useState, useEffect } from "react"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from "react-toastify"
+import { useParams } from "react-router-dom"
+import ModalEffetsSecondaires from "./ModalEffetsSecondaires"
 
-/**
- * Composant Agenda - Affiche un calendrier de traitement avec différentes fonctionnalités
- * @param {Object} props - Les propriétés du composant
- * @param {Array} props.treatments - Liste des traitements
- * @param {Object} props.activeDaysCount - Nombre de jours actifs par session
- * @param {Array} props.agendaMonths - Mois à afficher dans l'agenda
- * @param {Function} props.getTreatmentInfo - Fonction pour obtenir les infos d'un traitement
- * @param {Function} props.setState - Fonction pour mettre à jour l'état
- * @param {Function} props.openModal - Fonction pour ouvrir un modal
- * @param {boolean} props.showInfoTooltip - État d'affichage du tooltip d'info
- * @param {Function} props.setShowInfoTooltip - Fonction pour gérer l'affichage du tooltip
- */
 function Agenda({
-  treatments, 
-  activeDaysCount, 
-  agendaMonths, 
-  getTreatmentInfo, 
-  setState, 
+  treatments,
+  activeDaysCount,
+  agendaMonths,
+  getTreatmentInfo,
+  setState,
   openModal,
-  showInfoTooltip, 
+  showInfoTooltip,
   setShowInfoTooltip,
-  onSessionsFetched, // New prop to send sessions back to parent
-  onSessionClosed, // New prop to handle session closure
+  onSessionsFetched,
+  onSessionClosed,
+  suspensions,
+  setSuspensions,
 }) {
-    const [selectedDay, setSelectedDay] = useState(null); // Jour sélectionne dans l'agenda
-  const [contextMenuPosition, setContextMenuPosition] = useState(null); // Position du menu contextuel
-  const [isSideEffectModalOpen, setIsSideEffectModalOpen] = useState(false); // etat du modal des effets secondaires
-  
-  // Gestion des notes
-  const [noteInputVisible, setNoteInputVisible] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [notes, setNotes] = useState([]);
-  
+  const [selectedDay, setSelectedDay] = useState(null)
+  const [contextMenuPosition, setContextMenuPosition] = useState(null)
+  const [isSideEffectModalOpen, setIsSideEffectModalOpen] = useState(false)
+
+  const [noteInputVisible, setNoteInputVisible] = useState(false)
+  const [noteText, setNoteText] = useState("")
+  const [notes, setNotes] = useState([])
+  const [effects, setEffects] = useState([])
+
   // Gestion des sessions fermées (dropdown)
-  const [expandedClosedSessions, setExpandedClosedSessions] = useState(new Set());
-  
-  const [rendezVousDates, setRendezVousDates] = useState([]);
-  const [isSessionClosed, setIsSessionClosed] = useState(false);const [statut, setStatut] = useState(() => {
-    const sessionData = localStorage.getItem("sessionTempData");
-    const initialStatut = sessionData ? JSON.parse(sessionData).statut !== false : false;
-    console.log("Initial statut from localStorage:", initialStatut);
-    return initialStatut;
-  });
+  const [expandedClosedSessions, setExpandedClosedSessions] = useState(new Set())
+
+  const [rendezVousDates, setRendezVousDates] = useState([])
+  const [isSessionClosed, setIsSessionClosed] = useState(false)
+  const [statut, setStatut] = useState(() => {
+    const sessionData = localStorage.getItem("sessionTempData")
+    const initialStatut = sessionData ? JSON.parse(sessionData).statut !== false : false
+    console.log("Initial statut from localStorage:", initialStatut)
+    return initialStatut
+  })
+
+  const [currentActiveSession, setCurrentActiveSession] = useState(null)
 
   
-  const contextMenuRef = useRef(null);
+  const generateSixMonths = () => {
+    const months = []
+    const currentDate = new Date()
 
-  // EFFETS 
-  
+    for (let i = 0; i < 24; i++) {  //24 months pour le moment 
+      const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1)
+      const year = monthDate.getFullYear()
+      const month = monthDate.getMonth()
 
-  const { id: idfich } = useParams(); // l'ID de la fiche dans l'URL
-  const [sessions, setSessions] = useState([]);  useEffect(() => {
-    console.log("useEffect triggered with idfich:", idfich);
-    if (!idfich) {
-      console.log("No idfich found, returning early");
-      return;
+      const start = startOfMonth(monthDate)
+      const end = endOfMonth(monthDate)
+      const days = eachDayOfInterval({ start, end })
+
+      months.push({
+        monthKey: `${year}-${month}`,
+        name: monthDate.toLocaleDateString("fr-FR", { month: "long" }),
+        year: year,
+        days: days,
+      })
     }
 
-    console.log("Fetching sessions for idfich:", idfich);    fetch(`http://localhost:5000/sessions/fiche/${idfich}`)
+    return months
+  }
+
+  const displayMonths = generateSixMonths()
+  const contextMenuRef = useRef(null)
+  const { id: idfich } = useParams()
+  const [sessions, setSessions] = useState([])
+
+  useEffect(() => {
+    console.log("useEffect triggered with idfich:", idfich)
+    if (!idfich) {
+      console.log("No idfich found, returning early")
+      return
+    }
+
+    console.log("Fetching sessions for idfich:", idfich)
+    fetch(`http://localhost:5000/sessions/fiche/${idfich}`)
       .then((res) => {
-        console.log("Response status:", res.status);
-        return res.json();
+        console.log("Response status:", res.status)
+        return res.json()
       })
       .then((data) => {
-        console.log("Sessions récupérées :", data);
-        console.log("Number of sessions found:", data.length);
-        setSessions(data);
-        
-        // Send sessions back to parent component for conversion to treatments
-        if (onSessionsFetched && typeof onSessionsFetched === 'function') {
-          onSessionsFetched(data);
+        console.log("Sessions récupérées :", data)
+        console.log("Number of sessions found:", data.length)
+        setSessions(data)
+
+        if (onSessionsFetched && typeof onSessionsFetched === "function") {
+          onSessionsFetched(data)
         }
-        
-        // Check if there's any active session in the backend
-        const hasActiveSession = data.some(session => session.statut === true);
-        console.log("Has active session from backend:", hasActiveSession);
-        console.log("Current statut before update:", statut);
-        setStatut(hasActiveSession);
-        console.log("Setting statut to:", hasActiveSession);
-        // Synchronize localStorage with the active session ID
+
+        const hasActiveSession = data.some((session) => session.statut === true)
+        console.log("Has active session from backend:", hasActiveSession)
+        console.log("Current statut before update:", statut)
+        setStatut(hasActiveSession)
+        console.log("Setting statut to:", hasActiveSession)
+
         if (hasActiveSession) {
-          const activeSession = data.find(session => session.statut === true);
+          const activeSession = data.find((session) => session.statut === true)
           if (activeSession && activeSession._id) {
-            localStorage.setItem("currentSessionId", activeSession._id);
-            console.log("📌 currentSessionId set to:", activeSession._id);
+            localStorage.setItem("currentSessionId", activeSession._id)
+            console.log("📌 currentSessionId set to:", activeSession._id)
+
+            // Charger les données de la session active
+            setCurrentActiveSession(activeSession)
+            loadActiveSessionData(activeSession)
           }
         } else {
-          localStorage.removeItem("currentSessionId");
-          console.log("📌 currentSessionId removed");
+          localStorage.removeItem("currentSessionId")
+          console.log("📌 currentSessionId removed")
+          setCurrentActiveSession(null)
         }
       })
-      .catch((err) =>
-        console.error("Erreur lors de la récupération des sessions :", err)
-      );
-  }, [idfich]);
+      .catch((err) => console.error("Erreur lors de la récupération des sessions :", err))
+  }, [idfich])
+
+  // Fonction pour charger les données de la session active
+  const loadActiveSessionData = (activeSession) => {
+    console.log("Loading active session data:", activeSession)
+
+    // Charger les notes existantes
+    if (activeSession.notes && Array.isArray(activeSession.notes)) {
+      const loadedNotes = activeSession.notes.map((note) => ({
+        text: typeof note === "string" ? note : note.text,
+        date:
+          typeof note === "string"
+            ? new Date()
+            : note.date && note.date.$date
+              ? new Date(note.date.$date)
+              : new Date(note.date || new Date()),
+      }))
+      setNotes(loadedNotes)
+    }
+
+    // chargement des effets secondaires existants
+    if (activeSession.effetsSignales && Array.isArray(activeSession.effetsSignales)) {
+      const loadedEffects = activeSession.effetsSignales.map((effect) => ({
+        ...effect,
+        dateDebut:
+          effect.dateDebut && effect.dateDebut.$date
+            ? new Date(effect.dateDebut.$date).toISOString().split("T")[0]
+            : effect.dateDebut,
+        dateFin:
+          effect.dateFin && effect.dateFin.$date
+            ? new Date(effect.dateFin.$date).toISOString().split("T")[0]
+            : effect.dateFin,
+      }))
+      setEffects(loadedEffects)
+    }
+
+    // Charger les rendez-vous existants
+    if (activeSession.rendezVous && Array.isArray(activeSession.rendezVous)) {
+      const rdvDates = activeSession.rendezVous.map((rdv) => {
+        if (typeof rdv === "string") {
+          return rdv
+        } else if (rdv.date) {
+          return rdv.date.$date ? new Date(rdv.date.$date).toISOString().split("T")[0] : rdv.date
+        }
+        return rdv
+      })
+      setRendezVousDates(rdvDates)
+    }
+
+    // Charger les suspensions existantes
+    if (activeSession.suspensions && Array.isArray(activeSession.suspensions)) {
+      console.log("Suspensions loaded:", activeSession.suspensions)
+    }
+  }
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (contextMenuRef.current && !contextMenuRef.current.contains(event.target)) {
-        setContextMenuPosition(null);
+        setContextMenuPosition(null)
       }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // SESSION :
-  // const handleCloseSession = () => {
-  //   setStatut(false);
-  //   setIsSessionClosed(true);
-    
-  //   // Mise à jour du localStorage
-  //   const sessionTempData = localStorage.getItem("sessionTempData");
-  //   if (sessionTempData) {
-  //     const session = JSON.parse(sessionTempData);
-  //     session.statut = false;
-  //     localStorage.setItem("sessionTempData", JSON.stringify(session));
-  //   }
-      //   saveSessionToBackend();
-  // };
-   const handleCloseSession = async () => {
-    console.log("Attempting to close session. Current statut:", statut);
-  
-  const sessionId = localStorage.getItem("currentSessionId");
-  if (!sessionId) {
-    console.error("ID de session introuvable.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://localhost:5000/sessions/${sessionId}/cloturer`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-    });
-
-  // Update state only after successful backend update
-    setStatut(false);
-    setIsSessionClosed(true);
-    
-    // Clear session data from localStorage
-    localStorage.removeItem("currentSessionId");
-    localStorage.removeItem("sessionTempData");
-    
-    // Notify parent component about session closure
-    if (onSessionClosed && typeof onSessionClosed === 'function') {
-      onSessionClosed(sessionId);
     }
-    
-    console.log("Session closed successfully. New statut:", false);
-  } catch (error) {
-    console.error("Erreur lors de la clôture :", error);
-    // Don't update state if there was an error
-  }
-};
 
-  /**
-   * Ajoute une nouvelle session
-   */
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleCloseSession = async () => {
+    console.log("Attempting to close session. Current statut:", statut)
+    console.log("LocalStorage content:", localStorage)
+    const sessionId = localStorage.getItem("currentSessionId")
+    console.log("Retrieved sessionId:", sessionId)
+    if (!sessionId) {
+      console.error("ID de session introuvable.")
+      return
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/sessions/${sessionId}/cloturer`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      })
+
+      setStatut(false)
+      setIsSessionClosed(true)
+      setCurrentActiveSession(null)
+
+      localStorage.removeItem("currentSessionId")
+      localStorage.removeItem("sessionTempData")
+
+      // Reset des données locales
+      setNotes([])
+      setEffects([])
+      setRendezVousDates([])
+
+      if (onSessionClosed && typeof onSessionClosed === "function") {
+        onSessionClosed(sessionId)
+      }
+
+      console.log("Session closed successfully. New statut:", false)
+
+      toast.success("Session clôturée avec succès !", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+    } catch (error) {
+      console.error("Erreur lors de la clôture :", error)
+      toast.error("Erreur lors de la clôture de la session", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+    }
+  }
+
   const handleAddSession = () => {
-  if (statut) {
-    toast.warning('Une session est déjà en cours. Veuillez la clôturer avant d\'en créer une nouvelle.', {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
-    return;
-  }
-  
-  // Réinitialisation des données
-  setNotes([]);
-  setRendezVousDates([]);
-  setStatut(true);
-  setIsSessionClosed(false);
-  
-  openModal("add");
-};
-  /**
-   * Gère l'expansion/collapse des sessions fermées
-   */
-  const toggleClosedSession = (sessionNumber) => {
-    setExpandedClosedSessions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sessionNumber)) {
-        newSet.delete(sessionNumber);
-      } else {
-        newSet.add(sessionNumber);
-      }
-      return newSet;
-    });
-  };
+    if (statut) {
+      toast.warning("Une session est déjà en cours. Veuillez la clôturer avant d'en créer une nouvelle.", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      })
+      return
+    }
 
-  /**
-   * Gère le clic sur un jour de l'agenda avec positionnement correct du menu contextuel
-   * @param {Date} day - Le jour cliqué
-   * @param {Object} treatmentInfo - Informations sur le traitement ce jour-là
-   * @param {Event} event - L'événement de clic pour le positionnement
-   */  const handleDayClick = (day, treatmentInfo, event) => {
-    // Ne rien faire si session clôturée ou si le jour n'appartient pas à la session active
+    setNotes([])
+    setRendezVousDates([])
+    setSuspensions([])
+    setEffects([])
+    setStatut(true)
+    setIsSessionClosed(false)
+    setCurrentActiveSession(null)
+
+    openModal("add")
+  }
+// a retirer
+  const toggleClosedSession = (sessionNumber) => {
+    setExpandedClosedSessions((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(sessionNumber)) {
+        newSet.delete(sessionNumber)
+      } else {
+        newSet.add(sessionNumber)
+      }
+      return newSet
+    })
+  }
+
+  const handleDayClick = (day, treatmentInfo, event) => {
     if (!statut || (treatmentInfo.hasTreatment && !treatmentInfo.isActive)) {
-      return;
-    }    if (treatmentInfo.hasTreatment && !treatmentInfo.isOverridden) {
-      setSelectedDay({ day, treatmentInfo });
-      
-      // Empêcher la propagation de l'événement
-      event.preventDefault();
-      event.stopPropagation();
-      
-      // Utiliser currentTarget pour avoir l'élément exact du bouton
-      const rect = event.currentTarget.getBoundingClientRect();
-      const menuWidth = 150;
-      const menuHeight = 160;
-      
-      // Position du menu : directement sous le bouton cliqué, centré
-      let x = rect.left + (rect.width / 2) - (menuWidth / 2);
-      let y = rect.bottom + 5; // 5px d'espacement sous le bouton
-      
-      // Ajuster si le menu sort de l'écran à droite
-      if (x + menuWidth > window.innerWidth - 10) {
-        x = window.innerWidth - menuWidth - 10;
-      }
-      
-      // Ajuster si le menu sort de l'écran à gauche
-      if (x < 10) {
-        x = 10;
-      }
-      
-      // Ajuster si le menu sort de l'écran en bas
-      if (y + menuHeight > window.innerHeight - 10) {
-        y = rect.top - menuHeight - 5; // Placer au-dessus du bouton
-        
-        // Si toujours pas de place, ajuster vers le haut
-        if (y < 10) {
-          y = 10;
+      return
+    }
+
+    if (event.button === 2 || event.type === "contextmenu") {
+      event.preventDefault()
+
+      if (treatmentInfo.hasTreatment && !treatmentInfo.isOverridden) {
+        setSelectedDay({ day, treatmentInfo })
+
+        const rect = event.currentTarget.getBoundingClientRect()
+        const menuWidth = 150
+        const menuHeight = 160
+
+        let x = rect.left + rect.width / 2 - menuWidth / 2
+        let y = rect.bottom + 5
+
+        if (x + menuWidth > window.innerWidth - 10) {
+          x = window.innerWidth - menuWidth - 10
         }
+
+        if (x < 10) {
+          x = 10
+        }
+
+        if (y + menuHeight > window.innerHeight - 10) {
+          y = rect.top - menuHeight - 5
+
+          if (y < 10) {
+            y = 10
+          }
+        }
+
+        console.log("Day button right-clicked:", day.toDateString())
+        console.log("Button rect:", rect)
+        console.log("Menu position:", { x, y })
+
+        setContextMenuPosition({ x, y })
       }
-      
-      console.log('Day button clicked:', day.toDateString());
-      console.log('Button rect:', rect);
-      console.log('Menu position:', { x, y });
-      
-      setContextMenuPosition({ x, y });
     } else {
       setState([
         {
@@ -261,20 +326,14 @@ function Agenda({
           endDate: day,
           key: "selection",
         },
-      ]);
-      openModal("add", treatmentInfo);
+      ])
+      openModal("add", treatmentInfo)
     }
-  };
+  }
 
-  // ============ GESTION DES ACTIONS ============
-  /**
-   * Gère les actions du menu contextuel
-   * @param {string} action - L'action sélectionnée
-   */
   const handleOptionClick = (action) => {
-    if (!selectedDay) return;
+    if (!selectedDay) return
 
-    // Initialisation de la plage pour la suspension
     if (action === "suspend") {
       setState([
         {
@@ -282,138 +341,201 @@ function Agenda({
           endDate: selectedDay.day,
           key: "selection",
         },
-      ]);
+      ])
+
+      openModal("suspend", selectedDay.treatmentInfo)
+      setContextMenuPosition(null)
+      setSelectedDay(null)
+      return
     }
 
-          if (action === "note") {
-  setNoteInputVisible(true);
-  setContextMenuPosition(null);
-   return;
- }
-    // Gestion des différentes actions
-    switch(action) {
+    if (action === "note") {
+      setNoteInputVisible(true)
+      setContextMenuPosition(null)
+      return
+    }
+
+    switch (action) {
       case "side_effect":
-        setIsSideEffectModalOpen(true);
-        break;
-      
-          
+        setIsSideEffectModalOpen(true)
+        break
+
       case "rendez_vous":
-        const dateStr = format(selectedDay.day, "yyyy-MM-dd");
+        const dateStr = format(selectedDay.day, "yyyy-MM-dd")
         if (!rendezVousDates.includes(dateStr)) {
-          setRendezVousDates((prev) => [...prev, dateStr]);
+          setRendezVousDates((prev) => [...prev, dateStr])
+          toast.success(`Rendez-vous ajouté pour le ${format(selectedDay.day, "dd/MM/yyyy")}`, {
+            position: "top-right",
+            autoClose: 2000,
+          })
         }
-        break;
+        break
       default:
-        openModal(action, selectedDay.treatmentInfo);
+        openModal(action, selectedDay.treatmentInfo)
     }
 
-    setContextMenuPosition(null);
-    setSelectedDay(null);
-  };
+    setContextMenuPosition(null)
+    setSelectedDay(null)
+  }
 
-  /**
-   * Ferme le menu après sélection d'une action
-   * @param {string} action - L'action sélectionnée
-   */
   const handleMenuAction = (action) => {
-    handleOptionClick(action);
-    setContextMenuPosition(null);
-  };
+    handleOptionClick(action)
+    setContextMenuPosition(null)
+  }
 
-  // ============ SAUVEGARDE ============
-  /**
-   * Sauvegarde la session dans le backend
-   */
-  // const saveSessionToBackend = async () => {
-  //   const sessionTempData = localStorage.getItem("sessionTempData");
-  //   if (!sessionTempData) return;
+  // soumission des effets secondaires depuis le modal
+  const handleEffectsSubmit = (effectsData) => {
+    console.log("Effects received from modal:", effectsData)
+    setEffects((prev) => [...prev, ...effectsData.effetsSignales])
+    setIsSideEffectModalOpen(false)
+    toast.success("Effet secondaire ajouté avec succès !", {
+      position: "top-right",
+      autoClose: 2000,
+    })
+  }
 
-  //   const session = JSON.parse(sessionTempData);
-  //   const idfich = localStorage.getItem("idfich");
-  //   const payload = {
-  //     ...session,
-  //     idfich,
-  //     statut,
-  //     rendezVous: rendezVousDates,
-  //     notes: notes.map((note) => ({
-  //       text: note.text,
-  //       date: format(note.date, "yyyy-MM-dd"),
-  //     })),
-  //   };
+  // Fonction modifiée pour sauvegarder ou mettre à jour la session
+  const saveOrUpdateSession = async () => {
+    const sessionId = localStorage.getItem("currentSessionId")
+    const isUpdatingExistingSession = sessionId && currentActiveSession
 
-  //   try {
-  //     const response = await fetch("http://localhost:5000/sessions", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(payload),
-  //     });
+    if (isUpdatingExistingSession) {
+      // Mise à jour d'une session existante
+      await updateExistingSession(sessionId)
+    } else {
+      // création d'une nvl session
+      await saveNewSession()
+    }
+  }
 
-  //     if (!response.ok) throw new Error("Erreur lors de l'enregistrement");
+  // mettre a jour une session existante
+  const updateExistingSession = async (sessionId) => {
+    const updateData = {
+      rendezVous: rendezVousDates,
+      notes: notes.map((note) => ({
+        text: note.text,
+        date: format(note.date, "yyyy-MM-dd"),
+      })),
+      effetsSignales: effects,
+      suspensions: suspensions.map((susp) => ({
+  startDate: format(new Date(susp.startDate), "yyyy-MM-dd"),
+  endDate: format(new Date(susp.endDate), "yyyy-MM-dd"),
+  note: susp.note || "",
+})),
+    }
 
-  //     console.log("Session sauvegardée avec succès !");
-  //     localStorage.removeItem("sessionTempData");
-  //   } catch (error) {
-  //     console.error("Erreur lors de l'envoi :", error);
-  //   }  // Sauvegarde la session dans le backend
-  const saveSessionToBackend = async () => {
-    const sessionTempData = localStorage.getItem("sessionTempData");
-    if (!sessionTempData) return;
+    console.log("Updating session with data:", updateData)
 
-    const session = JSON.parse(sessionTempData);
-    // Use the same idfich from URL parameters instead of localStorage
-    console.log("Saving session with idfich from URL params:", idfich);
+    try {
+      const response = await fetch(`http://localhost:5000/sessions/${sessionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) throw new Error(result.error || "Erreur lors de la mise à jour")
+
+      console.log("Session mise à jour avec succès")
+
+      toast.success("Session mise à jour avec succès !", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+
+      // Recharger les données de la session
+      const updatedSession = { ...currentActiveSession, ...updateData }
+      setCurrentActiveSession(updatedSession)
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error)
+      toast.error("Erreur lors de la mise à jour de la session", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+    }
+  }
+
+  // Fonction pour sauvegarder une nouvelle session
+  const saveNewSession = async () => {
+    const sessionTempData = localStorage.getItem("sessionTempData")
+    if (!sessionTempData) {
+      toast.error("Aucune donnée de session temporaire trouvée", {
+        position: "top-right",
+        autoClose: 3000,
+      })
+      return
+    }
+
+    const session = JSON.parse(sessionTempData)
+    console.log("Saving new session with idfich from URL params:", idfich)
     const payload = {
       ...session,
-      idfich, // This uses the idfich from useParams()
+      idfich,
       statut,
       rendezVous: rendezVousDates,
       notes: notes.map((note) => ({
         text: note.text,
         date: format(note.date, "yyyy-MM-dd"),
       })),
-    };
+      suspensions: suspensions.map((susp) => ({
+  startDate: format(new Date(susp.startDate), "yyyy-MM-dd"),
+  endDate: format(new Date(susp.endDate), "yyyy-MM-dd"),
+  note: susp.note || "",
+})),
+      effetsSignales: effects,
+    }
 
-    console.log("Session payload:", payload);
+    console.log("New session payload:", payload)
 
-  try {
-    const response = await fetch("http://localhost:5000/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch("http://localhost:5000/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
-    const result = await response.json();
+      const result = await response.json()
 
-    if (!response.ok) throw new Error(result.error || "Erreur lors de l'enregistrement");
+      if (!response.ok) throw new Error(result.error || "Erreur lors de l'enregistrement")
 
-    // Sauvegarde de l’ID de session pour pouvoir la clôturer plus tard    localStorage.setItem("currentSessionId", result.session_id);
-    console.log("Session sauvegardée avec succès avec ID :", result.session_id);
-    
-    toast.success("Session sauvegardée avec succès !", {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
+      localStorage.setItem("currentSessionId", result.session_id)
+      console.log("Session sauvegardée avec succès avec ID :", result.session_id)
 
-    // Optionnel : tu peux garder sessionTempData ou le supprimer
-    localStorage.removeItem("sessionTempData");  } catch (error) {
-    console.error("Erreur lors de l'envoi :", error);
-    toast.error("Erreur lors de l'enregistrement de la session", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    });
+      toast.success("Session sauvegardée avec succès !", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+
+      localStorage.removeItem("sessionTempData")
+
+      // Mettre à jour l'état de la session active
+      setCurrentActiveSession({ ...payload, _id: result.session_id })
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement :", error)
+      toast.error("Erreur lors de l'enregistrement de la session", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+    }
   }
-};
 
-
-  // ============ RENDU ============
   return (
     <div className="p-4 relative">
       {/* En-tête avec boutons et info */}
@@ -427,7 +549,8 @@ function Agenda({
               onMouseLeave={() => setShowInfoTooltip(false)}
             >
               <Info size={16} />
-            </button>            {showInfoTooltip && (
+            </button>
+            {showInfoTooltip && (
               <div className="absolute left-0 top-full mt-2 w-64 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-10 text-xs text-gray-600">
                 <p className="mb-1">• Chaque session est affichée dans sa propre ligne</p>
                 <p className="mb-1">• Les sessions actives sont marquées en vert</p>
@@ -437,22 +560,25 @@ function Agenda({
             )}
           </div>
         </div>
-          {/* Boutons de gestion de session */}
+        {/* Boutons de gestion de session */}
         <div className="flex gap-2">
-         <button
-  onClick={handleAddSession}
-  className="text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-1"
-  style={{
-    backgroundColor: 'oklch(76.5% 0.177 163.223)','&:hover': {backgroundColor: 'oklch(55% 0.118 184.704)' 
-    }
-  }}
-><Plus size={18} />Session
-</button>          <button
+          <button
+            onClick={handleAddSession}
+            className="text-white font-semibold py-2 px-4 rounded shadow flex items-center gap-1"
+            style={{
+              backgroundColor: "oklch(76.5% 0.177 163.223)",
+              "&:hover": { backgroundColor: "oklch(55% 0.118 184.704)" },
+            }}
+          >
+            <Plus size={18} />
+            Session
+          </button>
+          <button
             onClick={handleCloseSession}
             disabled={!statut}
             className={`font-semibold py-2 px-4 rounded shadow flex items-center gap-1 transition-all duration-200 ${
-              !statut 
-                ? "bg-gray-400 text-gray-600 cursor-not-allowed hover:bg-gray-400" 
+              !statut
+                ? "bg-gray-400 text-gray-600 cursor-not-allowed hover:bg-gray-400"
                 : "bg-red-500 hover:bg-red-700 text-white"
             }`}
             title={statut ? "Clôturer la session active" : "Aucune session active à clôturer"}
@@ -463,15 +589,24 @@ function Agenda({
         </div>
       </div>
 
+      {/* Indicateur de session active */}
+      {currentActiveSession && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-sm font-medium text-green-800">
+              Session active en cours - Vous pouvez ajouter des modifications
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Légende des traitements */}
       {treatments.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {treatments.map((treatment) => (
             <div key={treatment.sessionNumber} className="flex items-center">
-              <div
-                className="w-4 h-4 rounded-sm mr-1"
-                style={{ backgroundColor: treatment.color }}
-              ></div>
+              <div className="w-4 h-4 rounded-sm mr-1" style={{ backgroundColor: treatment.color }}></div>
               <span className="text-xs text-gray-700">
                 Session {treatment.sessionNumber} ({activeDaysCount[treatment.sessionNumber] || 0} jours actifs)
               </span>
@@ -482,244 +617,197 @@ function Agenda({
             <span className="text-xs text-gray-500">Jours inactifs/hors période</span>
           </div>
         </div>
-      )}      {/* Sessions en lignes */}
-      <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-        {treatments.length > 0 ? (
-          <div className="space-y-4">
-            {treatments.map((treatment) => (
-              <div key={treatment.sessionNumber} className="border border-gray-200 rounded-lg shadow-sm bg-white">
-                {/* En-tête de session */}
-                <div className="p-4 border-b border-gray-100 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-sm"
-                        style={{ backgroundColor: treatment.color }}
-                      ></div>
-                      
-                      {/* Bouton avec dropdown pour sessions fermées */}
-                      {!treatment.isActive ? (
-                        <button
-                          onClick={() => toggleClosedSession(treatment.sessionNumber)}
-                          className="flex items-center gap-2 hover:bg-gray-100 rounded px-2 py-1 transition-colors"
-                        >
-                          {expandedClosedSessions.has(treatment.sessionNumber) ? 
-                            <ChevronDown size={16} className="text-gray-600" /> : 
-                            <ChevronRight size={16} className="text-gray-600" />
-                          }
-                          <h3 className="font-semibold text-gray-800">
-                            Session {treatment.sessionNumber}
-                          </h3>
-                        </button>
-                      ) : (
-                        <h3 className="font-semibold text-gray-800">
-                          Session {treatment.sessionNumber}
-                        </h3>
-                      )}
-                      
-                      <span className="text-sm text-gray-600">
-                        ({activeDaysCount[treatment.sessionNumber] || 0} jours actifs)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        treatment.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {treatment.isActive ? 'Active' : 'Fermée'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+      )}
 
-                {/* Calendrier complet de la session - Visible pour sessions actives ou fermées expandées */}
-                {(treatment.isActive || expandedClosedSessions.has(treatment.sessionNumber)) && (
-                  <div className="p-4">
-                    {/* En-têtes des jours de la semaine */}
-                    <div className="grid grid-cols-7 gap-1 mb-3 text-xs text-gray-500 font-medium border-b pb-2">
-                      <div className="text-center py-1">Lun</div>
-                      <div className="text-center py-1">Mar</div>
-                      <div className="text-center py-1">Mer</div>
-                      <div className="text-center py-1">Jeu</div>
-                      <div className="text-center py-1">Ven</div>
-                      <div className="text-center py-1">Sam</div>
-                      <div className="text-center py-1">Dim</div>
-                    </div>
-                    
-                    {/* Affichage par mois avec tous les jours */}
-                    {agendaMonths.map((month) => {                      // Vérifier si ce mois contient des jours de cette session
-                      const hasSessionDays = month.days.some(day => {
-                        const treatmentInfo = getTreatmentInfo(day, treatment.sessionNumber);
-                        return treatmentInfo.hasTreatment;
-                      });
-
-                      if (!hasSessionDays) return null;
-
-                      return (
-                        <div key={`${treatment.sessionNumber}-${month.monthKey}`} className="mb-6">
-                          <div className="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200 bg-gray-50 px-3 py-2 rounded-t">
-                            {month.name} {month.year}
-                          </div>
-                          <div className="grid grid-cols-7 gap-1 p-2 bg-gray-50/30 rounded-b">
-                            {/* Jours vides pour alignement du premier jour */}
-                            {Array.from({
-                              length: getDay(month.days[0]) === 0 ? 6 : getDay(month.days[0]) - 1,
-                            }).map((_, i) => (
-                              <div key={`empty-${i}`} className="w-12 h-16 m-[1px] invisible"></div>
-                            ))}
-                              {/* Affichage de tous les jours du mois */}
-                            {month.days.map((day, i) => {
-                              const treatmentInfo = getTreatmentInfo(day, treatment.sessionNumber);
-                              const isToday = isSameDay(day, new Date());
-                              const dayName = format(day, "EEE", { locale: fr }).substring(0, 1).toUpperCase();
-                              const hasSessionTreatment = treatmentInfo.hasTreatment;
-
-                              let bgColor = "#ffffff"; // Blanc par défaut
-                              let textColor = "#6b7280"; // Gris moyen
-                              let dayNameColor = "text-gray-400";
-                              let borderClass = "border border-gray-200";
-                              let shadowClass = "";
-                              let hoverClass = "";                              if (hasSessionTreatment) {
-                                // This day belongs to the current session being displayed
-                                bgColor = treatmentInfo.color;
-                                textColor = "#ffffff";
-                                dayNameColor = "text-gray-100";
-                                borderClass = "border-2 border-white/20";
-                                shadowClass = "shadow-lg";
-                                hoverClass = "hover:scale-105 hover:shadow-xl";
-                              } else {
-                                // Jours sans traitement pour cette session - style plus subtil
-                                bgColor = "#f8fafc";
-                                borderClass = "border border-gray-100";
-                                hoverClass = "hover:bg-gray-100";
-                              }
-
-                              if (isToday) {
-                                borderClass += " ring-2 ring-green-500 ring-offset-1";
-                              }
-
-                              return (
-                                <button
-                                  key={i}
-                                  onClick={(event) => hasSessionTreatment ? handleDayClick(day, treatmentInfo, event) : null}
-                                  disabled={!hasSessionTreatment}
-                                  className={`
-                                    w-12 h-16 flex flex-col items-center justify-center m-[1px] 
-                                    rounded-lg text-xs font-medium transition-all duration-200
-                                    ${hasSessionTreatment ? 'cursor-pointer' : 'cursor-default'}
-                                    ${borderClass}
-                                    ${shadowClass}
-                                    ${hoverClass}
-                                  `}
-                                  style={{ backgroundColor: bgColor, color: textColor }}                                  title={
-                                    hasSessionTreatment
-                                      ? `${treatmentInfo.name} - ${treatmentInfo.treatment} (${treatmentInfo.daysCount} jours)`
-                                      : `${format(day, "dd/MM/yyyy")} - Pas de traitement pour cette session`
-                                  }
-                                >
-                                  <span className={`text-[8px] font-medium ${dayNameColor} mb-1`}>{dayName}</span>
-                                  <span className={`text-lg font-bold ${hasSessionTreatment ? 'text-inherit' : 'text-gray-400'}`}>
-                                    {day.getDate()}
-                                  </span>
-                                  
-                                  {/* Indicateurs */}
-                                  <div className="flex items-center justify-center mt-1 space-x-1">
-                                    {/* Indicateur de rendez-vous */}
-                                    {rendezVousDates.includes(format(day, "yyyy-MM-dd")) && (
-                                      <span className="w-2 h-2 bg-black rounded-full" title="Rendez-vous"></span>
-                                    )}                                    {/* Indicateur de session active */}
-                                    {hasSessionTreatment && (
-                                      <span className="w-1.5 h-1.5 bg-white/70 rounded-full" title="Session active"></span>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+      {/* Sessions en lignes */}
+      <div className="max-h-[calc(100vh-200px)] overflow-y-auto border border-gray-200 rounded-lg shadow-sm">
+        <div className="relative">
+          {displayMonths.map((month) => (
+            <div key={month.monthKey} className="flex border-gray-200 last:border-b-0">
+              <div className="w-16 py-2 pr-0 font-medium text-gray-700 text-right sticky left-0 bg-white">
+                {month.name} <span className="text-xs text-gray-500">{month.year}</span>
               </div>
-            ))}
 
-            {/* Modal des effets secondaires */}
-            {isSideEffectModalOpen && (
-              <ModalEffetsSecondaires
-                open={isSideEffectModalOpen}
-                setOpenModal={setIsSideEffectModalOpen}
-                selectedDay={selectedDay}
-              />
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500 border border-gray-200 rounded-lg">
-            Aucun traitement programmé. Ajoutez une session pour voir l'agenda.
-          </div>
-        )}
+              <div className="flex-1 py-2 pl-2">
+                <div className="flex flex-wrap">
+                  {/* Jours vides pour alignement */}
+                  {Array.from({
+                    length: getDay(month.days[0]) === 0 ? 6 : getDay(month.days[0]) - 1,
+                  }).map((_, i) => (
+                    <div key={`empty-${i}`} className="w-8 h-12 m-[1px] invisible"></div>
+                  ))}
+
+                  {/* Jours du mois */}
+                  {month.days.map((day, i) => {
+                    const treatmentInfo = getTreatmentInfo ? getTreatmentInfo(day) : { hasTreatment: false }
+                    const isToday = isSameDay(day, new Date())
+                    const dayName = format(day, "EEE", { locale: fr }).substring(0, 1).toUpperCase()
+
+                    let bgColor = "white"
+                    let textColor = "inherit"
+                    let dayNameColor = "text-gray-400"
+                    const ringColor = isToday ? "ring-2 ring-green-500" : ""
+
+                    if (treatmentInfo.hasTreatment) {
+                      if (treatmentInfo.isOverridden) {
+                        bgColor = "#f3f4f6"
+                        textColor = "#9ca3af"
+                        dayNameColor = "text-gray-300"
+                      } else {
+                        bgColor = treatmentInfo.color
+                        dayNameColor = "text-gray-600"
+                      }
+                    } else {
+                      bgColor = "#f9fafb"
+                      textColor = "#9ca3af"
+                      dayNameColor = "text-gray-300"
+                    }
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={(event) => handleDayClick(day, treatmentInfo, event)}
+                        onContextMenu={(event) => handleDayClick(day, treatmentInfo, event)}
+                        className={`w-8 h-12 flex flex-col items-center justify-start pt-1 m-[1px] rounded-md text-xs font-medium hover:bg-gray-100 transition-colors ${treatmentInfo.hasOverlap ? "ring-1 ring-white" : ""} ${ringColor}`}
+                        style={{ backgroundColor: bgColor, color: textColor }}
+                        title={
+                          treatmentInfo.hasTreatment
+                            ? `${treatmentInfo.name} - ${treatmentInfo.treatment} (${treatmentInfo.daysCount} jours)` +
+                              (treatmentInfo.isOverridden
+                                ? ` - Remplacé par Session ${treatmentInfo.sessionNumber}`
+                                : treatmentInfo.hasOverlap
+                                  ? " - Chevauche d'autres sessions"
+                                  : "")
+                            : `${format(day, "dd/MM/yyyy")} - Aucun traitement programmé`
+                        }
+                      >
+                        <span className={`text-[9px] font-medium ${dayNameColor} mb-1`}>{dayName}</span>
+                        <span className="text-sm">{day.getDate()}</span>
+
+                        
+                        {/* {rendezVousDates.includes(format(day, "yyyy-MM-dd")) && (
+                          <span className="w-3 h-3 bg-black rounded-full mt-auto ml-auto mr-1 mb-1"></span>
+                        )} */}
+
+                        <div className="flex justify-between items-end w-full mt-auto mb-1">
+  {/* Point rouge pour effets secondaires (cote gauche) */}
+  {effects.some(effect => {
+    const effectDate = typeof effect.dateDebut === 'string' 
+      ? effect.dateDebut 
+      : format(new Date(effect.dateDebut), "yyyy-MM-dd");
+    return effectDate === format(day, "yyyy-MM-dd");
+  }) && (
+    <span className="w-2 h-2 bg-red-500 rounded-full ml-1"></span>
+  )}
+  
+  {/* Espace pour pousser le point noir à droite */}
+  <div className="flex-1"></div>
+  
+  {/* Point noir pour rendez-vous (cote droit) */}
+  {rendezVousDates.includes(format(day, "yyyy-MM-dd")) && (
+    <span className="w-2 h-2 bg-black rounded-full mr-1"></span>
+  )}
+</div>
+                        
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          ))}
+          {treatments.length === 0 && (
+            <div className="text-center py-4 text-gray-500 text-sm border-t border-gray-100">
+              Ajoutez une session pour voir les traitements programmés
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Modal des effets secondaires */}
+      {isSideEffectModalOpen && (
+        <ModalEffetsSecondaires
+          open={isSideEffectModalOpen}
+          setOpenModal={setIsSideEffectModalOpen}
+          selectedDay={selectedDay}
+          onSubmit={handleEffectsSubmit}
+        />
+      )}
+
       {/* Section des notes */}
-     {noteInputVisible && selectedDay && (
-  <div className="mt-4 p-4 border-t border-gray-200">
-    <div className="mb-2 text-sm text-gray-700">
-      Ajouter une note pour le <strong>{format(selectedDay.day, "dd/MM/yyyy")}</strong> :
-    </div>
-    <div className="flex items-center gap-2">
-      <input
-        type="text"
-        className="border px-2 py-1 rounded w-full"
-        placeholder="Votre note..."
-        value={noteText}
-        onChange={(e) => setNoteText(e.target.value)}
-      />
-      <button
-        onClick={() => {
-          if (!noteText.trim()) return;
-          setNotes((prev) => [
-            ...prev,
-            {
-              text: noteText,
-              date: selectedDay.day,
-            },
-          ]);
-          setNoteText("");
-          setNoteInputVisible(false);
-          setSelectedDay(null);
-        }}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
-      >
-        Valider
-      </button>
-    </div>
-  </div>
-)}
+      {noteInputVisible && selectedDay && (
+        <div className="mt-4 p-4 border-t border-gray-200">
+          <div className="mb-2 text-sm text-gray-700">
+            Ajouter une note pour le <strong>{format(selectedDay.day, "dd/MM/yyyy")}</strong> :
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              className="border px-2 py-1 rounded w-full"
+              placeholder="Votre note..."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+            />
+            <button
+              onClick={() => {
+                if (!noteText.trim()) return
+                setNotes((prev) => [
+                  ...prev,
+                  {
+                    text: noteText,
+                    date: selectedDay.day,
+                  },
+                ])
+                setNoteText("")
+                setNoteInputVisible(false)
+                setSelectedDay(null)
+                toast.success("Note ajoutée avec succès !", {
+                  position: "top-right",
+                  autoClose: 2000,
+                })
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+            >
+              Valider
+            </button>
+          </div>
+        </div>
+      )}
 
-{notes.length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-lg font-semibold mb-2 text-gray-700">Notes de la session</h3>
-    <ul className="space-y-2">
-      {notes.map((note, index) => (
-        <li key={index} className="bg-gray-100 p-2 rounded text-sm text-gray-800">
-          <strong>{format(note.date, "dd/MM/yyyy")} :</strong> {note.text}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+      {notes.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2 text-gray-700">Notes de la session</h3>
+          <ul className="space-y-2">
+            {notes.map((note, index) => (
+              <li key={index} className="bg-gray-100 p-2 rounded text-sm text-gray-800">
+                <strong>
+                  {note.date instanceof Date
+                    ? format(note.date, "dd/MM/yyyy")
+                    : format(new Date(note.date), "dd/MM/yyyy")}
+                  :
+                </strong>{" "}
+                {note.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-
-      {/* Bouton de sauvegarde */}
+      {/* enregisterer ou mettre */}
       <div className="mt-6 text-right">
         <button
-          onClick={saveSessionToBackend}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded"
+          onClick={saveOrUpdateSession}
+          className={`font-semibold py-2 px-4 rounded shadow flex items-center gap-1 ml-auto ${
+            currentActiveSession
+              ? "bg-orange-600 hover:bg-orange-700 text-white"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
         >
-          Enregistrer la session
+          {currentActiveSession ? "Mettre à jour la session" : "Enregistrer la session"}
         </button>
-      </div>      {/* Menu contextuel */}
+      </div>
+
+      {/* Menu contextuel */}
       {contextMenuPosition && (
         <div
           ref={contextMenuRef}
@@ -743,9 +831,7 @@ function Agenda({
           >
             <StickyNote size={16} className="text-yellow-600" /> Ajouter une note
           </button>
-          
 
-          
           <button
             onClick={() => handleMenuAction("side_effect")}
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
@@ -756,13 +842,13 @@ function Agenda({
             onClick={() => handleMenuAction("rendez_vous")}
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
           >
-            <CalendarPlus size={14} className="text-blue-600"/> Ajouter un rendez-vous
+            <CalendarPlus size={14} className="text-blue-600" /> Ajouter un rendez-vous
           </button>
         </div>
       )}
       <ToastContainer />
-      </div>
-  );
+    </div>
+  )
 }
 
-export default Agenda;
+export default Agenda

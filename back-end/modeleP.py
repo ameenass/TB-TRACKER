@@ -40,6 +40,10 @@ class NoteModel(BaseModel):
     text: str
     date: datetime  
 
+class SuspensionModel(BaseModel):
+    startDate: datetime
+    endDate :datetime
+    note : str
 class SessionModel(BaseModel):
     idfich: str
     statut: bool
@@ -47,8 +51,9 @@ class SessionModel(BaseModel):
     dateFin: Optional[datetime  ]
     notes: Optional[List[NoteModel]] = []
     rendezVous: Optional[List[str]] = []  # ✅ maintenant c’est une liste de chaînes
-    consultationsControle: Optional[List[ConsultationControleModel]] = []
+    effetsSignales: Optional[List[EffetSignaleModel]] = []
     traitement: Optional[str]
+    suspensions: Optional[List[SuspensionModel]] = []
 
 # class Antecedents(BaseModel):
 #     id: str
