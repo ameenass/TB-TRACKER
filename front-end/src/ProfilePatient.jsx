@@ -18,13 +18,15 @@ import { fr } from "date-fns/locale"
 import Agenda from "./Agenda"
 import SessionCreationModal from "./SessionCreationModal"
 import { XCircle } from "lucide-react"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 function ProfilePatient() {
   const { id } = useParams()
 
   const [fiche, setFiche] = useState(null)
   const [patient, setPatient] = useState(null)
-  const [expandedSection, setExpandedSection] = useState(null)
+  const [expandedSection, setExpandedSection] = useState("medicalInfo")
 
   const treatmentColors = {
     RHZ: "#f87171",
@@ -369,13 +371,39 @@ function ProfilePatient() {
 
       if (response.ok) {
         console.log("Statut mis à jour avec succès !")
+        // Mettre à jour l'état local pour refléter le changement immédiatement
+        setFiche({ ...fiche, statut: nouveauStatut })
         setMenuOuvert(false)
+
+        toast.success(
+          `Fiche ${nouveauStatut === "perdu" ? "marquée comme perdue de vue" : nouveauStatut === "décès" ? "marquée comme décès" : "clôturée"} avec succès!`,
+          {
+            position: "top-right",
+            autoClose: 3000,
+          },
+        )
       } else {
         console.error("Erreur lors de la mise à jour du statut")
+        toast.error("Erreur lors de la mise à jour du statut", {
+          position: "top-right",
+          autoClose: 3000,
+        })
       }
     } catch (error) {
       console.error("Erreur réseau :", error)
+      toast.error("Erreur réseau lors de la mise à jour du statut", {
+        position: "top-right",
+        autoClose: 3000,
+      })
     }
+  }
+
+  
+  const isAgendaEditable = () => {
+    if (!fiche || !fiche.statut) return true
+
+    const statut = fiche.statut.toLowerCase().trim()
+    return statut !== "cloturée" && statut !== "décès" && statut !== "perdu"
   }
 
   if (!fiche || !patient) return <div className="p-5">Chargement...</div>
@@ -384,7 +412,7 @@ function ProfilePatient() {
     <div className="pt-6 w-full min-h-screen bg-white p-2">
       <div className="grid grid-cols-[300px_1fr] gap-0 min-h-screen">
         {/* LEFT PANEL */}
-        <div className="w-full h-full bg-white shadow-md overflow-hidden rounded-r-lg">
+        <div className="w-full h-full bg-white shadow-md rounded-r-lg flex flex-col max-h-screen">
           <div className="bg-green-100 p-4 flex items-center">
             <div className="w-15 h-15 bg-gray-200 rounded-full flex items-center justify-center border-4 border-white">
               <span className="text-gray-400 text-4xl">{patient.nom?.charAt(0)}</span>
@@ -394,14 +422,15 @@ function ProfilePatient() {
                 {patient.nom} {patient.prenom}
               </h1>
               <div className="flex items-center mt-1 space-x-3">
-                <span className="bg-white text-green-800 px-2 py-1 text-xs font-semibold rounded-full">Création</span>
-                
+                <span className="bg-white text-green-800 px-2 py-1 text-xs font-semibold rounded-full">
+                  {fiche.statut || "Création"}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Sections */}
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 flex-1 overflow-y-auto">
             {/* GENERAL */}
             <div>
               <div className="cursor-pointer hover:bg-green-50" onClick={() => toggleSection("generalInfo")}>
@@ -537,6 +566,8 @@ function ProfilePatient() {
           onSessionClosed={handleSessionClosed}
           suspensions={suspensions}
           setSuspensions={setSuspensions}
+          ficheStatut={fiche.statut}
+          isAgendaEditable={isAgendaEditable()}
         />
       </div>
 

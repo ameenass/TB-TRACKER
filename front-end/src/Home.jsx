@@ -49,13 +49,7 @@ function Home() {
                 traitements et les effets secondaires et améliorez la qualité des soins.
               </p>
               <div className="flex flex-wrap gap-4">
-                <a
-                  href=""
-                  className="inline-flex items-center px-6 py-3 bg-white text-teal-600 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  Notre App
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
+                
                 <a
                   href="/aide"
                   className="inline-flex items-center px-6 py-3 bg-teal-600/20 text-white rounded-full font-medium backdrop-blur-sm hover:bg-teal-600/30 transition-all duration-300"

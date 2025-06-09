@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Calendar, Check } from "lucide-react";
 import MultiBoxSelector from "./MultiBoxSelector";
 import { v4 as uuidv4 } from 'uuid';
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const CustomFormField = ({
   id,
@@ -115,6 +115,7 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
   const [note, setNote] = useState('');
   const [contraception, setContraception] = useState(false);
   const [patient, setPatient] = useState(null);
+  const navigate = useNavigate();
 
   const { id } = useParams();
     useEffect(() => {
@@ -172,6 +173,8 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
       toast.success("Données enregistrées avec succès !", {
         position: "bottom-right"
       });
+      setOpenModal(false);
+      navigate(`/profile/${id}`);
       } else {
       toast.error("Erreur lors de l'enregistrement des données.", {
         position: "bottom-right"
@@ -209,8 +212,8 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
   if (!open) return null;
   
   return (
-    <div className="pt-24 mx-auto overlay fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center">
-      <div className="modalcontainer absolute bg-gradient-to-b from-emerald-50 to-white w-2/3 max-h-[90vh] overflow-y-auto mx-auto p-8 my-4 rounded-xl shadow-lg">
+    <div className="mx-auto overlay fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center">
+       <div className="modalcontainer absolute bg-gradient-to-b from-emerald-50 to-white w-2/3 max-h-[90vh] overflow-y-auto mx-auto p-8 my-4 rounded-xl shadow-lg">
         <ToastContainer />
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-800">Fiche de traitement</h2>

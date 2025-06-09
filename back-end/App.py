@@ -27,10 +27,9 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/tb_tracker"
 #app.config["MONGO_URI"] = "mongodb+srv://msideneche:mohamed2003@cluster0.tjadpy9.mongodb.net/TBTracker"
 mongo = PyMongo(app)
 
-# Test database connection
 def test_database_connection():
     try:
-        # Test the connection by attempting to access the database
+        
         mongo.db.command('ping')
         print("Database connection successful!")
         print(f"Connected to database: {mongo.db.name}")
@@ -65,7 +64,6 @@ def home():
 def add_patient():
     try:
         data = request.get_json()
-
         alphabet = string.ascii_letters + string.digits
         mdp_genere = ''.join(secrets.choice(alphabet) for _ in range(6))
         hashed_mdp = generate_password_hash(mdp_genere) # on le hache avant de l'utiliser non lisible
@@ -202,27 +200,26 @@ def ajouter_fiche():
         data = request.get_json()
         print(data)
 
-        # ✅ Conversion IDPatient (string venant du frontend) en ObjectId
+        #  Conversion IDPatient (string venant du frontend) en ObjectId
         # if 'IDPatient' in data:
         #     data['IDPatient'] = ObjectId(data['IDPatient'])
 
         if 'date_debut' not in data:
             data['date_debut'] = date.today()
 
-        # ✅ Création Pydantic
         fiche = FicheModel(**data)
         fiche_dict = fiche.model_dump()
         
 
-        # ✅ Conversion des dates
+        #  Conversion des dates
         for field in ['date_debut', 'date_cloture']:
             if isinstance(fiche_dict.get(field), date):
                 fiche_dict[field] = fiche_dict[field].isoformat()
 
-        # ✅ Insertion dans MongoDB
+        # Insertion dans MongoDB
         mongo.db.ficheTraitement.insert_one(fiche_dict)
         
-        # ✅ Mise à jour du patient avec l'ObjectId
+        #  Mise à jour du patient avec l'ObjectId
         update_result = mongo.db.patients.update_one(
             {"_id": fiche.IDPatient},  # 👈 on utilise _id ici, pas "IDPatient"
             {"$push": {"fiches": fiche.idfich}}
@@ -301,6 +298,7 @@ def create_session():
                 "_id": str(rdv_result.inserted_id),
                 "date": date  
         })
+               
         # print("Consultations recues:", session.consultationsControle)
 
        
@@ -390,6 +388,7 @@ def get_sessions_by_fiche(idfich):
         return jsonify({"error": str(e)}), 500
 
 
+
 @app.route('/sessions/<session_id>', methods=['PUT'])
 def update_session(session_id):
     try:
@@ -397,31 +396,50 @@ def update_session(session_id):
         if not data:
             return jsonify({"error": "Aucune donnée fournie"}), 400
 
-        update_fields = {}
-        for key in ["rendezVous", "notes", "effetsSignales", "suspensions"]:
-            if key in data:
-                update_fields[key] = data[key]
-
-        if not update_fields:
-            return jsonify({"error": "Aucun champ valide à mettre à jour"}), 400
-
-        result = mongo.db.sessions.update_one(
-            {"_id": ObjectId(session_id)},
-            {"$set": update_fields}
-        )
-
-        if result.matched_count == 0:
+        session = mongo.db.sessions.find_one({"_id": ObjectId(session_id)})
+        if not session:
             return jsonify({"error": "Session non trouvée"}), 404
 
-        if result.modified_count == 0:
-            return jsonify({"message": "Aucune modification apportée"}), 200
+        update_fields = {}
 
-        return jsonify({"message": "Session mise à jour avec succès"}), 200
+        # ----- Rendez vous -----
+        if "rendezVous" in data:
+            mongo.db.rendezvous.delete_many({"_id": {"$in": [ObjectId(rdv["_id"]) for rdv in session.get("rendezVous", [])]}})
+            new_rendezVous = []
+            for date in data["rendezVous"]:
+                rdv_id = mongo.db.rendezvous.insert_one({"date": date}).inserted_id
+                new_rendezVous.append({"_id": str(rdv_id), "date": date})
+            update_fields["rendezVous"] = new_rendezVous
+
+        # ----- Effets -----
+        if "effetsSignales" in data:
+            mongo.db.effets_signales.delete_many({"_id": {"$in": [ObjectId(effet["_id"]) for effet in session.get("effetsSignales", [])]}})
+            new_effets = []
+            for effet in data["effetsSignales"]:
+                effet_id = mongo.db.effets_signales.insert_one(effet).inserted_id
+                new_effets.append({**effet, "_id": str(effet_id)})
+            update_fields["effetsSignales"] = new_effets
+
+        if "suspensions" in data:
+            update_fields["suspensions"] = data["suspensions"]  
+
+        if "notes" in data:
+            update_fields["notes"] = data["notes"]  
+
+        if update_fields:
+            result = mongo.db.sessions.update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": update_fields}
+            )
+            if result.modified_count == 0:
+                return jsonify({"message": "Aucune modification apportée"}), 200
+
+        return jsonify({"message": "Session et collections liées mises à jour avec succès"}), 200
 
     except Exception as e:
         return jsonify({"error": f"Erreur serveur : {str(e)}"}), 500
-    
-    
+
+
 @app.route('/patients/<IDPatient>/fiches', methods=['GET'])
 def get_fiches_by_patient(IDPatient):
     try:
@@ -435,14 +453,14 @@ def get_fiches_by_patient(IDPatient):
 @app.route('/fiches/<idfich>', methods=['GET'])
 def get_fiche(idfich):
     try:
-        print(f"🔍 Looking for fiche with idfich: {idfich}")
+        print(f" Looking for fiche with idfich: {idfich}")
         fiche = ficheTraitement.find_one({'idfich': idfich})
         if not fiche:
             print(f"❌ Fiche not found with idfich: {idfich}")
             return jsonify({'error': "Fiche non trouvée"}), 404
 
-        print(f"✅ Fiche found: {fiche.get('idfich', 'N/A')}")
-        print(f"📋 Fiche IDPatient: {fiche.get('IDPatient', 'N/A')}")
+        print(f" Fiche found: {fiche.get('idfich', 'N/A')}")
+        print(f" Fiche IDPatient: {fiche.get('IDPatient', 'N/A')}")
         
         fiche['_id'] = str(fiche['_id'])
         return jsonify(fiche)
@@ -472,17 +490,15 @@ def modifier_fiche(idfich):
 
 
 if __name__ == '__main__':
-    print("🚀 Starting TB Tracker Server...")
-    print("=" * 50)
-    
+   
     # Test database connection
     if test_database_connection():
         try:
             # List collections to show database info
             collections = mongo.db.list_collection_names()
-            print(f"📁 Available collections: {collections}")
+            print(f" Available collections: {collections}")
         except Exception as e:
-            print(f"⚠️  Warning: Could not list collections: {e}")
+            print(f"  Warning: Could not list collections: {e}")
     
     # Créer un médecin par défaut (à supprimer apres)
     try:
@@ -495,12 +511,9 @@ if __name__ == '__main__':
         else:
             print(" Médecin par défaut déjà existant")
     except Exception as e:
-        print(f"⚠️  Warning: Could not create/check default doctor: {e}")
+        print(f"  Warning: Could not create/check default doctor: {e}")
     
-    print("=" * 50)
-    print("🌐 Server is starting on http://localhost:5000")
-    print("📚 Swagger API documentation available at: http://localhost:5000/swagger")
-    print("🐛 Debug mode: ON")
-    print("=" * 50)
+    print(" Server is starting on http://localhost:5000")
+
     
     app.run(debug=True)

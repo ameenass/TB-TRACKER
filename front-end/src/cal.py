@@ -17,12 +17,17 @@ def produce(month,width,beg_col):
         res.append(row)
     return res,col
 
-mat,col=produce(31,15,5)
-mat1,col1=produce(28,15,col)
+mat,col=produce(31,28,0)
+mat1,col1=produce(28,28,col+1)
+mat2,col2=produce(28,28,col1+1)
 print(f"Last col is {col1}")
 for row in mat:
     print(row)
 print("----------------------------------------")
 for row in mat1:
+    print(row)
+    
+print("----------------------------------------")
+for row in mat2:
     print(row)
     

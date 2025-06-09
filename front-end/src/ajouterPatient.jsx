@@ -1,5 +1,6 @@
 
 import { useState } from "react"
+import { useNavigate , useParams } from "react-router-dom"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { User, Calendar, Phone, Mail, BadgeCheck, UserIcon as Male, UserIcon as Female, X } from "lucide-react"
@@ -117,12 +118,13 @@ export default function Formulaire() {
   const [sexe, setSexe] = useState("")
   const [DateNaissance, setDateNaissance] = useState("")
   const [poidsInitial, setPoidsInitial] = useState(50)
-
+  // const navigate = useNavigate();
   const handleEnregistrer = async () => {
     if (!nom || !prenom || !email || !sexe || !numero || !DateNaissance) {
       toast.error("Tous les champs doivent être remplis !")
       return
     }
+    
 
       const formData = {
 
@@ -161,7 +163,7 @@ export default function Formulaire() {
           autoClose: false,
         });
 
-        navigate(`/profile/${data.mot_de_passe}`);
+        //navigate(`/profile/${data.IDPatient}`);
         console.log("Mot de passe généré :", data.mot_de_passe);
       })
       .catch(error => {
