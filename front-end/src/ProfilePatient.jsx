@@ -15,7 +15,7 @@ import {
   getYear,
 } from "date-fns"
 import { fr } from "date-fns/locale"
-import Agenda from "./Agenda"
+import Agenda from "./agenda"
 import SessionCreationModal from "./SessionCreationModal"
 import { XCircle } from "lucide-react"
 import { toast } from "react-toastify"
@@ -55,7 +55,6 @@ function ProfilePatient() {
   const [menuOuvert, setMenuOuvert] = useState()
   const [sessionNotes, setSessionNotes] = useState({})
 
-  // État pour stocker les suspensions
   const [suspensions, setSuspensions] = useState([])
 
   const getSelectedDaysCount = () => {
@@ -248,8 +247,7 @@ function ProfilePatient() {
       sessionNumber: selectedSession.sessionNumber,
     })
 
-    const updated = treatments
-      .map((t) => {
+    const updated = treatments.map((t) => {
         if (t.sessionNumber === selectedSession.sessionNumber) {
           const filteredDates = t.dates.filter((d) => d < start || d > end)
           if (deletionNote.trim()) {
@@ -332,6 +330,34 @@ function ProfilePatient() {
 
     return { hasTreatment: false, isOutsideTreatmentPeriod: false }
   }
+
+  {/*const getTreatmentInfo = (date) => {
+  if (treatmentBoundaries.earliestDate && treatmentBoundaries.latestDate) {
+    if (isBefore(date, treatmentBoundaries.earliestDate) || isAfter(date, treatmentBoundaries.latestDate)) {
+      return { hasTreatment: false, isOutsideTreatmentPeriod: true }
+    }
+  }
+
+  // il ne peut y en avoir qu'une qui contient ce jour
+  const session = treatments.find((t) => t.dates.some((d) => isSameDay(d, date)))
+
+  if (session) {
+    return {
+      hasTreatment: true,
+      isOutsideTreatmentPeriod: false,
+      color: session.color,
+      name: `Session ${session.sessionNumber}`,
+      daysCount: session.daysCount,
+      sessionNumber: session.sessionNumber,
+      treatment: session.treatment,
+      isActive: session.isActive,
+      isClosed: session.isClosed || false,
+    }
+  }
+
+  return { hasTreatment: false, isOutsideTreatmentPeriod: false }
+}
+ */}
 
   useEffect(() => {
     const fetchData = async () => {
@@ -423,7 +449,7 @@ function ProfilePatient() {
               </h1>
               <div className="flex items-center mt-1 space-x-3">
                 <span className="bg-white text-green-800 px-2 py-1 text-xs font-semibold rounded-full">
-                  {fiche.statut || "Création"}
+                  {fiche.statut }
                 </span>
               </div>
             </div>

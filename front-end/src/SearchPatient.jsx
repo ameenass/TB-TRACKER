@@ -184,9 +184,10 @@ import { Link } from "react-router-dom"
 import { User, Calendar, MapPin, Search, X, ChevronRight } from "lucide-react"
 
 function SearchPatient() {
-  const [patients, setPatients] = useState([])
+  
   const [searchTerm, setSearchTerm] = useState("")
   const [isFocused, setIsFocused] = useState(false)
+  const [patients, setPatients] = useState([])
 
   useEffect(() => {
     fetch("http://127.0.0.1:5000/patients")
@@ -246,7 +247,7 @@ function SearchPatient() {
 
   return (
     <div className="p-5 pt-24 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Recherche de Patients</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Recherche des Patients</h1>
 
       {/* Modern Search Bar */}
       <div className="relative w-full max-w-3xl mx-auto mb-10">
@@ -281,7 +282,7 @@ function SearchPatient() {
             </button>
           )}
 
-          <button
+          {/* <button
             className={`
               flex items-center justify-center h-12 px-6
               bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600
@@ -291,7 +292,7 @@ function SearchPatient() {
           >
             <span className="hidden sm:inline mr-2 font-medium">Rechercher</span>
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </button> */}
         </div>
       </div>
 

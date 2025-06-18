@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Calendar, Check } from "lucide-react";
-import MultiBoxSelector from "./MultiBoxSelector";
-import { v4 as uuidv4 } from 'uuid';
-import { useParams, useNavigate } from "react-router-dom";
+"use client"
+
+import { useState, useEffect } from "react"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import { Calendar, Check } from "lucide-react"
+import { v4 as uuidv4 } from "uuid"
+import { useParams, useNavigate } from "react-router-dom"
 
 const CustomFormField = ({
   id,
@@ -16,12 +17,16 @@ const CustomFormField = ({
   Icon,
   isSelect = false,
   options = [],
-  readOnly = false
+  readOnly = false,
 }) => {
   return (
     <div className="flex flex-col space-y-1 w-full">
-      <label htmlFor={id} className="text-gray-700 text-sm font-medium">{label}</label>
-      <div className={`flex items-center border border-emerald-200 rounded-lg p-2 bg-white focus-within:border-emerald-500 ${readOnly ? 'bg-emerald-50' : ''}`}>
+      <label htmlFor={id} className="text-gray-700 text-sm font-medium">
+        {label}
+      </label>
+      <div
+        className={`flex items-center border border-emerald-200 rounded-lg p-2 bg-white focus-within:border-emerald-500 ${readOnly ? "bg-emerald-50" : ""}`}
+      >
         {Icon && <Icon className="w-5 h-5 text-emerald-500 mr-2" />}
         {isSelect ? (
           <select
@@ -45,7 +50,7 @@ const CustomFormField = ({
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
-              )
+              ),
             )}
           </select>
         ) : (
@@ -56,13 +61,13 @@ const CustomFormField = ({
             onChange={onChange}
             placeholder={placeholder}
             readOnly={readOnly}
-            className={`bg-transparent outline-none text-gray-700 w-full placeholder-gray-400 ${readOnly ? 'cursor-not-allowed' : ''}`}
+            className={`bg-transparent outline-none text-gray-700 w-full placeholder-gray-400 ${readOnly ? "cursor-not-allowed" : ""}`}
           />
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
 const CheckboxGroup = ({ label, options, selectedValues, onChange, name }) => {
   return (
@@ -79,70 +84,67 @@ const CheckboxGroup = ({ label, options, selectedValues, onChange, name }) => {
               checked={selectedValues.includes(option)}
               onChange={() => {
                 if (selectedValues.includes(option)) {
-                  onChange(selectedValues.filter(v => v !== option));
+                  onChange(selectedValues.filter((v) => v !== option))
                 } else {
-                  onChange([...selectedValues, option]);
+                  onChange([...selectedValues, option])
                 }
               }}
             />
-            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center mr-2 transition-colors ${
-              selectedValues.includes(option) 
-                ? 'bg-emerald-500 border-emerald-500' 
-                : 'border-gray-300'
-            }`}>
-              {selectedValues.includes(option) && (
-                <Check className="w-4 h-4 text-white" />
-              )}
+            <div
+              className={`w-5 h-5 border-2 rounded flex items-center justify-center mr-2 transition-colors ${
+                selectedValues.includes(option) ? "bg-emerald-500 border-emerald-500" : "border-gray-300"
+              }`}
+            >
+              {selectedValues.includes(option) && <Check className="w-4 h-4 text-white" />}
             </div>
             <span className="text-gray-700">{option}</span>
           </label>
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
 export default function FicheTraitementModal({ open, setOpenModal }) {
-  const [date_debut] = useState(new Date().toISOString().split('T')[0]);
-  const [statut] = useState('Creation');
+  const [date_debut] = useState(new Date().toISOString().split("T")[0])
+  const [statut] = useState("Creation")
 
-  const [poidsInitial, setPoidsInitial] = useState(50);
-  const [categorie, setCategorie] = useState('');
-  const [preuve, setPreuve] = useState('');
-  const [selectedSousType, setSelectedSousType] = useState("");
-  const [Comptage_tuberculeux, setComptage_tuberculeux] = useState([]);
-  const [antecedents, setAntecedents] = useState([]);
-  const [note, setNote] = useState('');
-  const [contraception, setContraception] = useState(false);
-  const [patient, setPatient] = useState(null);
-  const navigate = useNavigate();
+  const [poidsInitial, setPoidsInitial] = useState(50)
+  const [categorie, setCategorie] = useState("")
+  const [preuve, setPreuve] = useState("")
+  const [selectedSousType, setSelectedSousType] = useState("")
+  const [Comptage_tuberculeux, setComptage_tuberculeux] = useState([])
+  const [antecedents, setAntecedents] = useState([])
+  const [note, setNote] = useState("")
+  const [contraception, setContraception] = useState(false)
+  const [patient, setPatient] = useState(null)
+  const navigate = useNavigate()
 
-  const { id } = useParams();
-    useEffect(() => {
-    console.log("🔍 FicheTraitementModal - ID from useParams:", id);
+  const { id } = useParams()
+  useEffect(() => {
+    console.log("🔍 FicheTraitementModal - ID from useParams:", id)
     fetch(`http://localhost:5000/patients/${id}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log("🔍 FicheTraitementModal - Patient récupéré:", data);
-        console.log("🔍 FicheTraitementModal - Patient IDPatient field:", data.IDPatient);
-        console.log("🔍 FicheTraitementModal - Patient keys:", Object.keys(data));
-        setPatient(data);
+        console.log("🔍 FicheTraitementModal - Patient récupéré:", data)
+        console.log("🔍 FicheTraitementModal - Patient IDPatient field:", data.IDPatient)
+        console.log("🔍 FicheTraitementModal - Patient keys:", Object.keys(data))
+        setPatient(data)
       })
       .catch((error) => {
-        console.error("❌ FicheTraitementModal - Erreur lors de la récupération du patient", error);
-      });
-  }, [id]);
+        console.error("❌ FicheTraitementModal - Erreur lors de la récupération du patient", error)
+      })
+  }, [id])
   const handleEnregistrer = async () => {
-    if (!poidsInitial || !categorie || !selectedSousType || !Comptage_tuberculeux ) {
-      toast.error("Tous les champs doivent être remplis !");
-      return;
+    if (!poidsInitial || !categorie || !selectedSousType || !Comptage_tuberculeux) {
+      toast.error("Tous les champs doivent être remplis !")
+      return
     }
 
+    console.log("🔍 FicheTraitementModal - Patient object:", patient)
+    console.log("🔍 FicheTraitementModal - patient.IDPatient:", patient?.IDPatient)
+    console.log("🔍 FicheTraitementModal - ID from useParams (should be IDPatient):", id)
 
-    console.log("🔍 FicheTraitementModal - Patient object:", patient);
-    console.log("🔍 FicheTraitementModal - patient.IDPatient:", patient?.IDPatient);
-    console.log("🔍 FicheTraitementModal - ID from useParams (should be IDPatient):", id);
-  
     const formData = {
       idfich: uuidv4(),
       IDPatient: patient?.IDPatient || id, // Use patient.IDPatient if available, otherwise use id from URL
@@ -152,174 +154,161 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
       preuve,
       selectedSousType,
       Comptage_tuberculeux: Comptage_tuberculeux.length > 0,
-      antecedents, 
-      poidsInitial: parseFloat(poidsInitial), 
-      note: note || "", 
+      antecedents,
+      poidsInitial: Number.parseFloat(poidsInitial),
+      note: note || "",
       contraception,
-    };
+    }
 
-    console.log("🔍 FicheTraitementModal - FormData being sent:", formData);
-    console.log("🔍 FicheTraitementModal - FormData IDPatient:", formData.IDPatient);
+    console.log("🔍 FicheTraitementModal - FormData being sent:", formData)
+    console.log("🔍 FicheTraitementModal - FormData IDPatient:", formData.IDPatient)
 
     try {
-      console.log("FormData sent to backend:", formData);
-      const response = await fetch('http://localhost:5000/ajouter_fiche', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-      });
+      console.log("FormData sent to backend:", formData)
+      const response = await fetch("http://localhost:5000/ajouter_fiche", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
       if (response.ok) {
-      const data = await response.json();
-      toast.success("Données enregistrées avec succès !", {
-        position: "bottom-right"
-      });
-      setOpenModal(false);
-      navigate(`/profile/${id}`);
+        const data = await response.json()
+        toast.success("Données enregistrées avec succès !", {
+          position: "bottom-right",
+        })
+        setOpenModal(false)
+        // Instead of using navigate, which doesn't refresh the component state
+        window.location.href = `/profile/${id}`
       } else {
-      toast.error("Erreur lors de l'enregistrement des données.", {
-        position: "bottom-right"
-      });
+        toast.error("Erreur lors de l'enregistrement des données.", {
+          position: "bottom-right",
+        })
       }
     } catch (error) {
       toast.error("Une erreur est survenue : " + error.message, {
-      position: "bottom-right"
-      });
+        position: "bottom-right",
+      })
     }
-  };
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    handleEnregistrer();
-  };
+    e.preventDefault()
+    handleEnregistrer()
+  }
 
-  const min = 10;
-  const max = 200;
-  const percent = ((poidsInitial - min) / (max - min)) * 100;
+  const min = 10
+  const max = 200
+  const percent = ((poidsInitial - min) / (max - min)) * 100
 
   const typesTuberculose = {
     Pulmonaire: ["Jamais traitée", "Déjà traitée"],
-    Extrapulmonaire: [
-      "Pleurale",
-      "Ganglionnaire",
-      "Ostéoarticulaire",
-      "Uro-génitale",
-      "Méningée"
-    ]
-  };
+    Extrapulmonaire: ["Pleurale", "Ganglionnaire", "Ostéoarticulaire", "Uro-génitale", "Méningée"],
+  }
 
-  const medecinNom = localStorage.getItem("medecinNom");
+  const medecinNom = localStorage.getItem("medecinNom")
 
-  if (!open) return null;
-  
+  if (!open) return null
+
   return (
     <div className="mx-auto overlay fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center">
-       <div className="modalcontainer absolute bg-gradient-to-b from-emerald-50 to-white w-2/3 max-h-[90vh] overflow-y-auto mx-auto p-8 my-4 rounded-xl shadow-lg">
+      <div className="modalcontainer absolute bg-gradient-to-b from-emerald-50 to-white w-2/3 max-h-[90vh] overflow-y-auto mx-auto p-8 my-4 rounded-xl shadow-lg">
         <ToastContainer />
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-800">Fiche de traitement</h2>
           <p className="text-lg text-emerald-600 mt-2">
-            {patient?.nom} {patient?.prenom}
+            De: {patient?.nom} {patient?.prenom}
           </p>
-          <p className="text-gray-600 mt-1">
-            Créée par {medecinNom}
-          </p>
+          <p className="text-gray-600 mt-1">Créée par {medecinNom}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/*Date de début */}
+            <div className="flex flex-col space-y-1 w-full">
+              <label htmlFor="date_debut" className="text-gray-700 text-sm font-medium flex items-center">
+                Date de début <span className="ml-1 text-xs text-gray-500">(automatique)</span>
+              </label>
+              <div className="flex items-center border border-emerald-200 rounded-lg p-2 bg-emerald-50 text-gray-600">
+                <Calendar className="w-5 h-5 text-emerald-500 mr-2" />
+                <span>{date_debut}</span>
+              </div>
+            </div>
 
-              {/*Date de début */}
-    <div className="flex flex-col space-y-1 w-full">
-          <label htmlFor="date_debut" className="text-gray-700 text-sm font-medium flex items-center">
-          Date de début <span className="ml-1 text-xs text-gray-500">(automatique)</span>
-          </label>
-       <div className="flex items-center border border-emerald-200 rounded-lg p-2 bg-emerald-50 text-gray-600">
-          <Calendar className="w-5 h-5 text-emerald-500 mr-2" />
-          <span>{date_debut}</span>
-        </div>
-    </div>
+            {/* Statut */}
+            <div className="flex flex-col space-y-1 w-full">
+              <label htmlFor="statut" className="text-gray-700 text-sm font-medium flex items-center">
+                Statut <span className="ml-1 text-xs text-gray-500">(automatique)</span>
+              </label>
+              <div className="p-2 border border-emerald-200 rounded-lg bg-emerald-50 text-gray-600">{statut}</div>
+            </div>
 
-             {/* Statut */}
-    <div className="flex flex-col space-y-1 w-full">
-        <label htmlFor="statut" className="text-gray-700 text-sm font-medium flex items-center">
-        Statut <span className="ml-1 text-xs text-gray-500">(automatique)</span>
-        </label>
-      <div className="p-2 border border-emerald-200 rounded-lg bg-emerald-50 text-gray-600">{statut}
-      </div>
-    </div>
-
-  {/* ✍️ Champ à remplir : Type de la tuberculose */}
-      <CustomFormField
-    id="typeTuberculose"
-    label="Type de la tuberculose"
-    value={selectedSousType}
-    onChange={(e) => setSelectedSousType(e.target.value)}
-    placeholder="Sélectionnez un type"
-    isSelect={true}
-    options={Object.entries(typesTuberculose).map(([type, sousTypes]) => ({
-      label: type,
-      options: sousTypes,
-    }))}
-  />
-</div>
+            {/* ✍️ Champ à remplir : Type de la tuberculose */}
+            <CustomFormField
+              id="typeTuberculose"
+              label="Type de la tuberculose"
+              value={selectedSousType}
+              onChange={(e) => setSelectedSousType(e.target.value)}
+              placeholder="Sélectionnez un type"
+              isSelect={true}
+              options={Object.entries(typesTuberculose).map(([type, sousTypes]) => ({
+                label: type,
+                options: sousTypes,
+              }))}
+            />
+          </div>
 
           {/* Section Catégorie */}
           <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
-  <h3 className="text-lg font-semibold text-emerald-800 mb-4">Catégorie</h3>
-  <div className="flex space-x-4">
-    {['I', 'II', 'III'].map((cat) => (
-      <label key={cat} className="flex items-center space-x-2 cursor-pointer">
-        <input
-          type="radio"
-          name="categorie"
-          value={cat}
-          checked={categorie === cat}
-          onChange={() => setCategorie(cat)}
-          className="hidden"
-        />
-        <div className={`w-5 h-5 border-2 flex items-center justify-center mr-2 transition-colors ${
-          categorie === cat 
-            ? 'bg-emerald-500 border-emerald-500' 
-            : 'border-gray-300'
-        }`}>
-          {categorie === cat && (
-            <Check className="w-3 h-3 text-white" />
-          )}
-        </div>
-        <span className="text-gray-700">Catégorie {cat}</span>
-      </label>
-    ))}
-  </div>
-</div>
+            <h3 className="text-lg font-semibold text-emerald-800 mb-4">Catégorie</h3>
+            <div className="flex space-x-4">
+              {["I", "II", "III"].map((cat) => (
+                <label key={cat} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="categorie"
+                    value={cat}
+                    checked={categorie === cat}
+                    onChange={() => setCategorie(cat)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-5 h-5 border-2 flex items-center justify-center mr-2 transition-colors ${
+                      categorie === cat ? "bg-emerald-500 border-emerald-500" : "border-gray-300"
+                    }`}
+                  >
+                    {categorie === cat && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-gray-700">Catégorie {cat}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
           {/* Section Preuve */}
           <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
-  <h3 className="text-lg font-semibold text-emerald-800 mb-4">Preuve</h3>
-  <div className="grid grid-cols-3 gap-4">
-    {['Bactériologique', 'Histologique', 'Sans preuve'].map((p) => (
-      <label key={p} className="flex items-center space-x-2 cursor-pointer">
-        <input
-          type="radio"
-          name="preuve"
-          value={p}
-          checked={preuve === p}
-          onChange={() => setPreuve(p)}
-          className="hidden"
-        />
-        <div className={`w-5 h-5 border-2 flex items-center justify-center mr-2 transition-colors ${
-          preuve === p 
-            ? 'bg-emerald-500 border-emerald-500' 
-            : 'border-gray-300'
-        }`}>
-          {preuve === p && (
-            <Check className="w-3 h-3 text-white" />
-          )}
-        </div>
-        <span className="text-gray-700">{p}</span>
-      </label>
-    ))}
-  </div>
-</div>
+            <h3 className="text-lg font-semibold text-emerald-800 mb-4">Preuve</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {["Bactériologique", "Histologique", "Sans preuve"].map((p) => (
+                <label key={p} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="preuve"
+                    value={p}
+                    checked={preuve === p}
+                    onChange={() => setPreuve(p)}
+                    className="hidden"
+                  />
+                  <div
+                    className={`w-5 h-5 border-2 flex items-center justify-center mr-2 transition-colors ${
+                      preuve === p ? "bg-emerald-500 border-emerald-500" : "border-gray-300"
+                    }`}
+                  >
+                    {preuve === p && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <span className="text-gray-700">{p}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
           {/* Poids avec style amélioré */}
           <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
@@ -353,7 +342,7 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
             <h3 className="text-lg font-semibold text-emerald-800 mb-4">Comptage tuberculeux</h3>
             <CheckboxGroup
               label=""
-              options={['Proches atteints', 'Proches traités']}
+              options={["Proches atteints", "Proches traités"]}
               selectedValues={Comptage_tuberculeux}
               onChange={setComptage_tuberculeux}
               name="Comptage_tuberculeux"
@@ -365,7 +354,7 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
             <h3 className="text-lg font-semibold text-emerald-800 mb-4">Antécédents</h3>
             <CheckboxGroup
               label=""
-              options={['Tuberculose', 'HTA', 'Diabète', 'Insuffisance rénale', 'Cardiopathie']}
+              options={["Tuberculose", "HTA", "Diabète", "Insuffisance rénale", "Cardiopathie"]}
               selectedValues={antecedents}
               onChange={setAntecedents}
               name="antecedents"
@@ -373,29 +362,27 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
           </div>
 
           {/* Section Contraception  */}
-{patient && patient.sexe === 'female' && (
-  <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
-    <h3 className="text-lg font-semibold text-emerald-800 mb-4">Contraception</h3>
-    <label className="flex items-center space-x-2 cursor-pointer">
-      <input
-        type="checkbox"
-        className="hidden"
-        checked={contraception}
-        onChange={(e) => setContraception(e.target.checked)}
-      />
-      <div className={`w-5 h-5 border-2 rounded flex items-center justify-center mr-2 transition-colors ${
-        contraception 
-          ? 'bg-emerald-500 border-emerald-500' 
-          : 'border-gray-300'
-      }`}>
-        {contraception && (
-          <Check className="w-4 h-4 text-white" />
-        )}
-      </div>
-      <span className="text-gray-700">Utilisation de contraceptifs</span>
-    </label>
-  </div>
-)}
+          {patient && patient.sexe === "female" && (
+            <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
+              <h3 className="text-lg font-semibold text-emerald-800 mb-4">Contraception</h3>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={contraception}
+                  onChange={(e) => setContraception(e.target.checked)}
+                />
+                <div
+                  className={`w-5 h-5 border-2 rounded flex items-center justify-center mr-2 transition-colors ${
+                    contraception ? "bg-emerald-500 border-emerald-500" : "border-gray-300"
+                  }`}
+                >
+                  {contraception && <Check className="w-4 h-4 text-white" />}
+                </div>
+                <span className="text-gray-700">Utilisation de contraceptifs</span>
+              </label>
+            </div>
+          )}
 
           {/* Détails supplémentaires */}
           <div className="bg-emerald-50 p-6 rounded-lg border border-emerald-100">
@@ -419,5 +406,5 @@ export default function FicheTraitementModal({ open, setOpenModal }) {
         </form>
       </div>
     </div>
-  );
+  )
 }

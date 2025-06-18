@@ -118,7 +118,7 @@ export default function Formulaire() {
   const [sexe, setSexe] = useState("")
   const [DateNaissance, setDateNaissance] = useState("")
   const [poidsInitial, setPoidsInitial] = useState(50)
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const handleEnregistrer = async () => {
     if (!nom || !prenom || !email || !sexe || !numero || !DateNaissance) {
       toast.error("Tous les champs doivent être remplis !")
@@ -165,6 +165,9 @@ export default function Formulaire() {
 
         //navigate(`/profile/${data.IDPatient}`);
         console.log("Mot de passe généré :", data.mot_de_passe);
+        setTimeout(() => {
+          navigate(`/profile/${data.id}`); // Navigate using data.id as previously advised
+        }, 10000);
       })
       .catch(error => {
         toast.error("Une erreur est survenue : " + error.message);
@@ -197,8 +200,16 @@ export default function Formulaire() {
             placeholder="Nom"
             Icon={User}
           />
-          <input  type="text" name="IDPatient" value={mot_de_passe} readOnly placeholder="Mot de passe généré" className="form-control"/>
-          
+         <CustomFormField
+            label="Mot de passe du patient"
+            id="mot_de_passe_genere"
+            fieldType="text"
+            value={mot_de_passe}
+            placeholder="Généré automatiquement"
+            Icon={BadgeCheck}
+            readOnly={true} // Rendre ce champ en lecture seule
+            className="md:col-span-2 lg:col-span-3 border-2 border-dashed border-emerald-300 bg-emerald-50 p-4 rounded-lg shadow-inner" // Style pour le démarquer
+          />
           <CustomFormField
             label="Prénom"
             id="prenom"

@@ -1,7 +1,10 @@
 from typing import  Optional , List 
 from pydantic import BaseModel,EmailStr , Field
 from datetime import date , datetime 
- 
+class LoginModel(BaseModel):
+    email: EmailStr
+    mot_de_passe: str
+    
 class AdresseListe(BaseModel):
      wilaya: Optional[str]
      commune: Optional[str]
@@ -16,7 +19,6 @@ class PatientModel(BaseModel):
     sexe: Optional[str]
     DateNaissance: date   
     poidsInitial: float 
-    #   categorie: Optional[str] #     preuve: Optional[str]#    adresse: List[AdresseListe]#     LocalisationTB: str#     typeTuberculose: Optional[str]#     comptage_tuberculeux: Optional[str]#     antecedents: List[int]#     note: Optional[str]
     adresse : AdresseListe
     mot_de_passe: str
     
@@ -50,14 +52,10 @@ class SessionModel(BaseModel):
     dateDebut: datetime  
     dateFin: Optional[datetime  ]
     notes: Optional[List[NoteModel]] = []
-    rendezVous: Optional[List[str]] = []  # ✅ maintenant c’est une liste de chaînes
+    rendezVous: Optional[List[str]] = []  #  maintenant c’est une liste de chaînes
     effetsSignales: Optional[List[EffetSignaleModel]] = []
     traitement: Optional[str]
     suspensions: Optional[List[SuspensionModel]] = []
-
-# class Antecedents(BaseModel):
-#     id: str
-#     description: str
 
 class FicheModel(BaseModel):
     idfich: str

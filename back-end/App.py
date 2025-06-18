@@ -3,25 +3,30 @@ from flask_pymongo import PyMongo
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
 from bson.objectid import ObjectId
-from modeleP import PatientModel, SessionModel, FicheModel, MedecinModel
+from modeleP import PatientModel, SessionModel, FicheModel, MedecinModel, LoginModel
 from pydantic import ValidationError
-from datetime import date
+from datetime import date ,datetime ,timedelta , timezone
 import secrets
 import string
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from pymongo import MongoClient
+import jwt
 
 
 app = Flask(__name__)
 CORS(app) 
 
-caracteres = string.ascii_letters + string.digits
-cle_secrete = '' .join(secrets.choice(caracteres) for _ in range(12))
-app.config['JWT_SECRET_KEY'] = cle_secrete
-
+# caracteres = string.ascii_letters + string.digits
+# cle_secrete = '' .join(secrets.choice(caracteres) for _ in range(12))
+# app.config['JWT_SECRET_KEY'] = cle_secrete
+# --- JWT Secret Key Configuration ---
+COMMON_SECRET_KEY = "votre_clé_secrète_hyper_sécurisée_ici_123!"  # À changer en production
+app.config['JWT_SECRET_KEY'] = COMMON_SECRET_KEY
+SECRET_KEY = COMMON_SECRET_KEY  # Pour la compatibilité avec PyJWT (login patient)
 #app.config['JWT_SECRET_KEY'] = 'TaCléSecrète'  
-jwt = JWTManager(app)  
+  
+jwt_manager = JWTManager(app)
 
 app.config["MONGO_URI"] = "mongodb://localhost:27017/tb_tracker"
 #app.config["MONGO_URI"] = "mongodb+srv://msideneche:mohamed2003@cluster0.tjadpy9.mongodb.net/TBTracker"
@@ -152,15 +157,96 @@ def get_patient(IDPatient):
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/login', methods=['POST'])
-def login_medecin():
+@app.route("/login-patient", methods=['POST'])
+def login_patient():
+    """Handles patient login and generates a JWT token."""
     try:
         data = request.get_json()
-        nom = data.get('nom')
-        password = data.get('mot_de_passe')
+        data = LoginModel(**data)
 
-        if not nom or not password:
-            return jsonify({'error': "Nom et mot de passe requis"}), 400
+        # 1. Chercher patient par email
+        patient = mongo.db.patients.find_one({"email": data.email})
+        if not patient:
+            return jsonify({"message": "Utilisateur non trouvé"}), 404
+
+        # Vérifier le mot de passe
+        if not check_password_hash(patient.get("mot_de_passe", ""), data.mot_de_passe):
+            return jsonify({"message": "Identifiants invalides"}), 401
+
+        # 2. Chercher fiche traitement par IDPatient
+        fiche = mongo.db.ficheTraitement.find_one({"IDPatient": str(patient["_id"])})
+        if not fiche:
+            return jsonify({"message": "Fiche de traitement non trouvée"}), 404
+
+        # 3. Chercher *toutes les sessions* par idfich
+        # CHANGE: Use find() instead of find_one() to get all sessions
+        all_sessions = list(mongo.db.sessions.find({"idfich": str(fiche["idfich"])}))
+
+        # Création du token JWT
+        payload = {
+            "email": data.email,
+            "idfich": str(fiche["_id"]),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+        }
+        token = jwt.encode(payload,SECRET_KEY, algorithm="HS256") # Ensure SECRET_KEY is defined
+
+        # Préparation des données utilisateur
+        user_data = {
+            "email": data.email,
+            "nom": patient.get("nom", ""),
+            "prenom": patient.get("prenom", ""),
+            "fiche": {
+                "id": str(fiche["_id"]),
+                "date_debut": fiche.get("date_debut"),
+                "statut": fiche.get("statut", ""),
+                "categorie": fiche.get("categorie", ""),
+                "preuve": fiche.get("preuve", ""),
+                "selectedSousType": fiche.get("selectedSousType", ""),
+                "Comptage_tuberculeux": fiche.get("Comptage_tuberculeux", False),
+                "antecedents": fiche.get("antecedents", []),
+                "poidsInitial": fiche.get("poidsInitial", 0.0),
+                "note": fiche.get("note", ""),
+                "contraception": fiche.get("contraception", False),
+            },
+            "sessions": [] # CHANGE: Use "sessions" (plural) to hold a list
+        }
+
+        # Process all found sessions
+        for session_doc in all_sessions: # Loop through all sessions
+            session_data = {
+                "_id": str(session_doc["_id"]),
+                "statut": session_doc.get("statut"),
+                "dateDebut": session_doc.get("dateDebut"),
+                "dateFin": session_doc.get("dateFin"),
+                "notes": session_doc.get("notes", []),
+                "rendezVous": session_doc.get("rendezVous", []),
+                "effetsSignales": session_doc.get("effetsSignales", []),
+                "traitement": session_doc.get("traitement"),
+                "suspensions": session_doc.get("suspensions", []),
+                "consultation": session_doc.get("consultation"),
+            }
+            user_data["sessions"].append(session_data) # Add to the list
+
+        return jsonify({
+            "message": "Login réussi",
+            "token": token,
+            "user": user_data
+        }), 200
+
+    except ValidationError as e:
+        return jsonify({"errors": e.errors()}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/login-medecin', methods=['POST'])
+def login_medecin():
+    """Handles doctor login and generates a JWT token."""
+    try:
+        data = request.get_json()
+        validated_data = MedecinModel(**data)
+        nom = validated_data.nom
+        password = validated_data.mot_de_passe
 
         medecin = medecins_collection.find_one({"nom": nom})
         if not medecin:
@@ -169,16 +255,49 @@ def login_medecin():
         if not check_password_hash(medecin['mot_de_passe'], password):
             return jsonify({'error': "Mot de passe incorrect"}), 401
 
-        access_token = create_access_token(identity=nom) #le nom est encodé --> pour connaitre a les prochaines cnx l'identite de medecin
+        # Use Flask-JWT-Extended's create_access_token (uses app.config['JWT_SECRET_KEY'])
+        access_token = create_access_token(identity=nom)
 
         return jsonify({
             'msg': "Connexion réussie!",
-            'token': access_token, #contient le nom encodé
+            'token': access_token,
             'nomMedecin': nom
         }), 200
 
+    except ValidationError as e:
+        return jsonify({'error': e.errors()}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
+# @app.route('/login', methods=['POST'])
+# def login_medecin():
+#     try:
+#         data = request.get_json()
+#         nom = data.get('nom')
+#         password = data.get('mot_de_passe')
+
+#         if not nom or not password:
+#             return jsonify({'error': "Nom et mot de passe requis"}), 400
+
+#         medecin = medecins_collection.find_one({"nom": nom})
+#         if not medecin:
+#             return jsonify({'error': "Médecin non trouvé"}), 404
+
+#         if not check_password_hash(medecin['mot_de_passe'], password):
+#             return jsonify({'error': "Mot de passe incorrect"}), 401
+
+#         access_token = create_access_token(identity=nom) #le nom est encodé --> pour connaitre a les prochaines cnx l'identite de medecin
+
+#         return jsonify({
+#             'msg': "Connexion réussie!",
+#             'token': access_token, #contient le nom encodé
+#             'nomMedecin': nom
+#         }), 200
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
     
 
 @app.route('/patients/<IDPatient>', methods=['DELETE'])
@@ -257,7 +376,31 @@ def update_fiche_statut(idfich):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/supprimer_fiche/<string:idfich>', methods=['DELETE'])
+def supprimer_fiche(idfich):
+    try:
+        fiche = mongo.db.ficheTraitement.find_one({"idfich": idfich})
+        if not fiche:
+            return jsonify({"error": "Fiche non trouvée"}), 404
 
+        delete_result = mongo.db.ficheTraitement.delete_one({"idfich": idfich})
+        
+        if delete_result.deleted_count == 0:
+            return jsonify({"error": "Aucune fiche supprimée"}), 404
+
+
+        update_result = mongo.db.patients.update_one(
+            {"_id": fiche['IDPatient']},
+            {"$pull": {"fiches": idfich}}
+        )
+
+        if update_result.modified_count == 0:
+            return jsonify({"warning": "Fiche supprimée, mais référence non retirée du patient"}), 200
+
+        return jsonify({"message": "Fiche supprimée avec succès et référence retirée du patient"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/rendezvous', methods=['POST'])
 def create_rendezvous():
     data = request.json
@@ -517,3 +660,5 @@ if __name__ == '__main__':
 
     
     app.run(debug=True)
+
+

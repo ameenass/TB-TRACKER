@@ -1,4 +1,3 @@
-"use client"
 
 // useEffect(() => {
 //   fetch("http://localhost:5000/patients/o6hzXDXTTz") //test avec un seul sans app jsx sans rien
@@ -13,7 +12,7 @@
 // }, []);
 
 import { useState, useEffect } from "react"
-import { UserCircle2, Phone, ChevronDown, ChevronRight, ListChecks, Plus } from "lucide-react"
+import { UserCircle2, Phone, ChevronDown, ChevronRight, ListChecks, Plus , Trash2 } from "lucide-react"
 import { useParams } from "react-router-dom"
 import FicheTraitementModal from "./FicheTraitementModal.jsx"
 
@@ -23,20 +22,25 @@ function FichePer() {
   const [openModal, setOpenModal] = useState(false)
   const [fiches, setFiches] = useState([])
   const [erreurFiche, setErreurFiche] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section)
   }
 
   const { id } = useParams()
+
   useEffect(() => {
-    fetch(`http://localhost:5000/patients/${id}`)
+    // Add a timestamp parameter to prevent caching
+    const timestamp = new Date().getTime()
+
+    fetch(`http://localhost:5000/patients/${id}?t=${timestamp}`)
       .then((response) => response.json())
       .then((data) => {
         console.log("Patient récupéré:", data)
         setPatient(data)
 
-        fetch(`http://localhost:5000/patients/${id}/fiches`)
+        fetch(`http://localhost:5000/patients/${id}/fiches?t=${timestamp}`)
           .then((res) => res.json())
           .then((fichesData) => {
             console.log("Fiches récupérées:", fichesData)
@@ -47,7 +51,40 @@ function FichePer() {
       .catch((error) => {
         console.error("Erreur lors de la récupération du patient", error)
       })
-  }, [id])
+  }, [id, refreshKey])
+
+  // Add this function to manually refresh data
+  const refreshData = () => {
+    setRefreshKey((oldKey) => oldKey + 1)
+  }
+
+  const handleSupprimerFiche = async (idfich, e) => {
+  e.stopPropagation() // Empêche le déclenchement du click sur le parent
+  
+  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette fiche ?")) {
+    return
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/supprimer_fiche/${idfich}`, {
+      method: 'DELETE',
+    })
+
+    const result = await response.json()
+    
+    if (response.ok) {
+      console.log('Suppression réussie:', result.message)
+      // Rafraîchir les données
+      refreshData()
+    } else {
+      console.error('Erreur lors de la suppression:', result.error)
+      alert(`Erreur lors de la suppression: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Erreur réseau:', error)
+    alert('Erreur réseau lors de la suppression')
+  }
+}
 
   // useEffect(() => {
   //   fetch(`http://localhost:5000/patients/${id}`)
@@ -121,7 +158,7 @@ function FichePer() {
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3 text-gray-700">
                   <Phone className="text-green-600 h-5 w-5" />
-                  <h3 className="font-medium">Contact Info</h3>
+                  <h3 className="font-medium">Contact </h3>
                 </div>
                 {expandedSection === "contactInfo" ? (
                   <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -201,24 +238,42 @@ function FichePer() {
                 </div>
 
                 {/* Liste des fiches */}
-                <div className="space-y-2">
-                  {fiches.map((fiche, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => {
-                        window.location.href = `/fiche-details/${fiche.idfich}`
-                      }}
-                    >
-                      <div className="text-gray-700">
-                        <span className="font-medium">
-                          fiche {fiche.date_debut}, {fiche.statut}
-                        </span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </div>
-                  ))}
-                </div>
+               <div className="space-y-2">
+  {fiches.map((fiche, index) => (
+    <div
+      key={index}
+      className="flex justify-between items-center p-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer group"
+      onClick={() => {
+        window.location.href = `/fiche-details/${fiche.idfich}`
+      }}
+    >
+      <div className="text-gray-700">
+        <span className="font-medium">
+          fiche {fiche.date_debut}, {fiche.statut}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={(e) => handleSupprimerFiche(fiche.idfich, e)}
+          className="
+            text-red-500 
+            opacity-0 
+            group-hover:opacity-100 
+            transition-opacity 
+            p-1 
+            hover:bg-red-50 
+            rounded
+          "
+          title="Supprimer la fiche"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+      </div>
+    </div>
+  ))}
+</div>
               </div>
             )}
           </div>

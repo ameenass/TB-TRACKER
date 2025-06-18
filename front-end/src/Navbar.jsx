@@ -340,7 +340,7 @@ import lungs from "./assets/lungs.png"
 import avatar from "./assets/avatar.png"
 
 const tabs = [
-  { name: "Home", icon: <Home size={20} />, path: "/" },
+  { name: "Accueil", icon: <Home size={20} />, path: "/" },
   { name: "Rechercher", icon: <Search size={20} />, path: "/rechercher" },
   { name: "Ajouter patient", icon: <UserPlus size={20} />, path: "/ajouterpatient" },
 ]
