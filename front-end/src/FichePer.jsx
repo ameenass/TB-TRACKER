@@ -1,20 +1,9 @@
-
-// useEffect(() => {
-//   fetch("http://localhost:5000/patients/o6hzXDXTTz") //test avec un seul sans app jsx sans rien
-//     .then((response) => response.json())
-//     .then((data) => {
-//       console.log("Patient récupéré:", data);
-//       setPatient(data);
-//     })
-//     .catch((error) => {
-//       console.error("Erreur lors de la récupération du patient", error);
-//     });
-// }, []);
-
 import { useState, useEffect } from "react"
-import { UserCircle2, Phone, ChevronDown, ChevronRight, ListChecks, Plus , Trash2 } from "lucide-react"
-import { useParams } from "react-router-dom"
+import { UserCircle2, Phone, ChevronDown, ChevronRight, ListChecks, Plus , Trash2 , Search } from "lucide-react"
+import { useParams , useNavigate } from "react-router-dom"
 import FicheTraitementModal from "./FicheTraitementModal.jsx"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function FichePer() {
   const [patient, setPatient] = useState(null)
@@ -23,6 +12,7 @@ function FichePer() {
   const [fiches, setFiches] = useState([])
   const [erreurFiche, setErreurFiche] = useState("")
   const [refreshKey, setRefreshKey] = useState(0)
+  const navigate = useNavigate()
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section)
@@ -31,7 +21,6 @@ function FichePer() {
   const { id } = useParams()
 
   useEffect(() => {
-    // Add a timestamp parameter to prevent caching
     const timestamp = new Date().getTime()
 
     fetch(`http://localhost:5000/patients/${id}?t=${timestamp}`)
@@ -53,38 +42,61 @@ function FichePer() {
       })
   }, [id, refreshKey])
 
-  // Add this function to manually refresh data
+  
   const refreshData = () => {
     setRefreshKey((oldKey) => oldKey + 1)
   }
 
   const handleSupprimerFiche = async (idfich, e) => {
-  e.stopPropagation() // Empêche le déclenchement du click sur le parent
-  
-  if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette fiche ?")) {
-    return
-  }
+  e.stopPropagation();
 
-  try {
-    const response = await fetch(`http://localhost:5000/supprimer_fiche/${idfich}`, {
-      method: 'DELETE',
-    })
+  // Création d'un toast de confirmation personnalisé
+  toast(
+    <div className="flex flex-col gap-2 p-2">
+      <p className="font-medium">Êtes-vous sûr de vouloir supprimer cette fiche ?</p>
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={() => toast.dismiss()}
+          className="px-3 py-1 text-sm border rounded hover:bg-gray-100"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={async () => {
+            toast.dismiss();
+            try {
+              const response = await fetch(`http://localhost:5000/supprimer_fiche/${idfich}`, {
+                method: 'DELETE',
+              });
 
-    const result = await response.json()
-    
-    if (response.ok) {
-      console.log('Suppression réussie:', result.message)
-      // Rafraîchir les données
-      refreshData()
-    } else {
-      console.error('Erreur lors de la suppression:', result.error)
-      alert(`Erreur lors de la suppression: ${result.error}`)
+              const result = await response.json();
+              
+              if (response.ok) {
+                toast.success('Fiche supprimée avec succès');
+                refreshData();
+              } else {
+                toast.error(`Erreur: ${result.error || 'Échec de la suppression'}`);
+              }
+            } catch (error) {
+              toast.error('Erreur réseau lors de la suppression');
+              console.error('Erreur:', error);
+            }
+          }}
+          className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Supprimer
+        </button>
+      </div>
+    </div>,
+    {
+      position: "top-center",
+      autoClose: false,
+      closeButton: false,
+      closeOnClick: false,
+      draggable: false,
     }
-  } catch (error) {
-    console.error('Erreur réseau:', error)
-    alert('Erreur réseau lors de la suppression')
-  }
-}
+  );
+};
 
   // useEffect(() => {
   //   fetch(`http://localhost:5000/patients/${id}`)
@@ -102,6 +114,13 @@ function FichePer() {
 
   return (
     <div className="p-6 pt-24 max-w-4xl mx-auto">
+      <button 
+        onClick={() => navigate("/rechercher")}
+        className="absolute top-6 right-6 p-2 text-gray-600 hover:text-green-800 hover:bg-green-100 rounded-full transition-colors"
+        title="Rechercher un patient"
+      >
+        <Search className="h-5 w-5" />
+      </button>
       {/* Patient Info */}
       <div className="ml-6 mb-6">
         <h1 className="text-2xl font-bold text-green-800">
@@ -279,6 +298,17 @@ function FichePer() {
           </div>
         </div>
       </div>
+      <ToastContainer 
+  position="top-right"
+  autoClose={5000}
+  hideProgressBar={false}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+/>
     </div>
   )
 }

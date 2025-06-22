@@ -123,14 +123,14 @@ function Agenda({
     return targetDay < today
   }
 
-  // si un jour est dans une periode de suspension
+  
   const isDaySuspended = (day) => {
     if (!suspensions || !Array.isArray(suspensions) || suspensions.length === 0) return false
 
     const dateStr = format(day, "yyyy-MM-dd")
 
     return suspensions.some((suspension) => {
-      // Convertir les dates de suspension en objets Date si ce sont des chaînes
+      
       const startDate =
         typeof suspension.startDate === "string" ? parseISO(suspension.startDate) : new Date(suspension.startDate)
 
@@ -230,11 +230,11 @@ function Agenda({
       setRendezVousDates(rdvDates)
     }
 
-    // Chargement des suspensions
+    
     if (activeSession.suspensions && Array.isArray(activeSession.suspensions)) {
       console.log("Suspensions loaded:", activeSession.suspensions)
 
-      // Convertir les dates de suspension en format approprié
+      
       const loadedSuspensions = activeSession.suspensions.map((susp) => {
         return {
           startDate:
@@ -271,8 +271,8 @@ function Agenda({
         return res.json()
       })
       .then((data) => {
-        console.log("Sessions récupérées :", data)
-        console.log("Number of sessions found:", data.length)
+        // console.log("Sessions récupérées :", data)
+        // console.log("Number of sessions found:", data.length)
         setSessions(data)
 
         if (onSessionsFetched && typeof onSessionsFetched === "function") {
@@ -280,23 +280,23 @@ function Agenda({
         }
 
         const hasActiveSession = data.some((session) => session.statut === true)
-        console.log("Has active session from backend:", hasActiveSession)
-        console.log("Current statut before update:", statut)
+        // console.log("Has active session from backend:", hasActiveSession)
+        // console.log("Current statut before update:", statut)
         setStatut(hasActiveSession)
-        console.log("Setting statut to:", hasActiveSession)
+        // console.log("Setting statut to:", hasActiveSession)
 
         if (hasActiveSession) {
           const activeSession = data.find((session) => session.statut === true)
           if (activeSession && activeSession._id) {
             localStorage.setItem("currentSessionId", activeSession._id)
-            console.log(" currentSessionId set to:", activeSession._id)
+            // console.log(" currentSessionId set to:", activeSession._id)
 
             setCurrentActiveSession(activeSession)
             loadActiveSessionData(activeSession)
           }
         } else {
           localStorage.removeItem("currentSessionId")
-          console.log(" currentSessionId removed")
+          // console.log(" currentSessionId removed")
           setCurrentActiveSession(null)
         }
       })
@@ -331,10 +331,10 @@ function Agenda({
       return
     }
 
-    console.log("Attempting to close session. Current statut:", statut)
-    console.log("LocalStorage content:", localStorage)
+    // console.log("Attempting to close session. Current statut:", statut)
+    // console.log("LocalStorage content:", localStorage)
     const sessionId = localStorage.getItem("currentSessionId")
-    console.log("Retrieved sessionId:", sessionId)
+    // console.log("Retrieved sessionId:", sessionId)
     if (!sessionId) {
       console.error("ID de session introuvable.")
       return
@@ -571,6 +571,8 @@ function Agenda({
         })
         setContextMenuPosition(null)
         setSelectedDay(null)
+
+        
         return
       }
 
@@ -585,6 +587,9 @@ function Agenda({
       openModal("suspend", selectedDay.treatmentInfo)
       setContextMenuPosition(null)
       setSelectedDay(null)
+      if (currentActiveSession) {
+    loadActiveSessionData(currentActiveSession)
+  }
       return
     }
 
@@ -601,6 +606,15 @@ function Agenda({
         break
 
       case "rendez_vous":
+        if (isDayInPast(selectedDay.day)) {
+          toast.error("Impossible d'ajouter un rendez-vous dans le passé. Veuillez sélectionner une date future.", {
+            position: "top-right",
+            autoClose: 5000,
+          })
+          setContextMenuPosition(null)
+          setSelectedDay(null)
+          return
+        }
         const dateStr = format(selectedDay.day, "yyyy-MM-dd")
         if (!rendezVousDates.includes(dateStr)) {
           setRendezVousDates((prev) => [...prev, dateStr])
@@ -1504,12 +1518,20 @@ loadActiveSessionData(updatedSession)
               <AlertCircle size={16} className="text-red-600" /> Effet secondaire
             </button>
           )}
-          <button
-            onClick={() => handleMenuAction("rendez_vous")}
-            className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"
-          >
-            <CalendarPlus size={14} className="text-blue-600" /> Ajouter un rendez-vous
-          </button>
+           <button
+      onClick={() => handleMenuAction("rendez_vous")}
+      disabled={selectedDay && isDayInPast(selectedDay.day)}
+      className={`flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left ${
+        selectedDay && isDayInPast(selectedDay.day) ? "opacity-50 cursor-not-allowed text-gray-400" : ""
+      }`}
+      title={
+        selectedDay && isDayInPast(selectedDay.day)
+          ? "Impossible d'ajouter un rendez-vous dans le passé"
+          : "Ajouter un rendez-vous"
+      }
+    >
+      <CalendarPlus size={14} className="text-blue-600" /> Ajouter un rendez-vous
+    </button>
         </div>
       )}
       <ToastContainer />
