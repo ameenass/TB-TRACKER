@@ -84,6 +84,7 @@ def add_patient():
         
         if isinstance(patient_dict.get('DateNaissance'), date):
             patient_dict['DateNaissance'] = patient_dict['DateNaissance'].isoformat()
+          #Vérifies que la valeur est bien un objet de type HNA DATE 
 
         result =patients_collection.insert_one(patient_dict)
 
@@ -145,12 +146,13 @@ def get_patient(IDPatient):
         if not patient:
             print(f" Patient not found with IDPatient: {IDPatient}")
             # Let's also check what patients exist in the database
-            all_patients = list(patients_collection.find({}, {'IDPatient': 1, 'nom': 1, 'prenom': 1}))
+            all_patients = list(patients_collection.find({}, {'IDPatient': 1, 'nom': 1, 'prenom': 1}))#1JEVEUXCECHAMP ET 0 C SON OPPOSé
+          #ET {} C UN FILTRE ET QUAND ELLE EST VIDE M3NTHA JE NE FILTRE RIEN JV KOLSH
             print(f" Available patients in database: {all_patients}")
             return jsonify({'error': "Patient non trouvé"}), 404
 
         patient['_id'] = str(patient['_id'])  
-        print(f" Patient found: {patient.get('nom', 'N/A')} {patient.get('prenom', 'N/A')}")
+        print(f" Patient found: {patient.get('nom', 'N/A')} {patient.get('prenom', 'N/A')}")#NOTAVAILABLE
         return jsonify(patient)
     except Exception as e:
         print(f" Error in get_patient: {e}")
@@ -181,7 +183,7 @@ def login_patient():
         # 3. Chercher *toutes les sessions* par idfich
         # CHANGE: Use find() instead of find_one() to get all sessions
         all_sessions = list(mongo.db.sessions.find({"idfich": str(fiche["idfich"])}))
-
+#HNARJ3THA STR PSA BEH KI N7WS 3LA SS B ID NLGEHA W MYSRACH ERR PSA MONGO STRICT F LES TYPES GENRE MSH NDKHLLHA STR N7WSS 3LEHA INT
         # Création du token JWT
         payload = {
             "email": data.email,
@@ -307,7 +309,7 @@ def ajouter_fiche():
         #  Conversion des dates
         for field in ['date_debut', 'date_cloture']:
             if isinstance(fiche_dict.get(field), date):
-                fiche_dict[field] = fiche_dict[field].isoformat()
+                fiche_dict[field] = fiche_dict[field].isoformat() #HNA RAH NHWLOU LES DATES KOL LL FORMAT ISO
 
         # Insertion dans MongoDB
         mongo.db.ficheTraitement.insert_one(fiche_dict)
@@ -316,7 +318,7 @@ def ajouter_fiche():
         update_result = mongo.db.patients.update_one(
             {"_id": fiche.IDPatient},  #  on utilise _id ici, pas "IDPatient"
             {"$push": {"fiches": fiche.idfich}}
-        )
+        )#edi push we use to add an element in an array f mongo
 
         if update_result.modified_count == 0:
             return jsonify({"warning": "Fiche ajoutée, mais patient non trouvé pour mise à jour."}), 201
@@ -341,7 +343,7 @@ def update_fiche_statut(idfich):
         result = ficheTraitement.update_one(
             {'idfich': idfich},
             {'$set': {'statut': nouveau_statut}}
-        )
+        )#set kifkif f mongo tmodifier valeur
 
         if result.matched_count == 0:
             return jsonify({'error': 'Fiche non trouvée'}), 404
@@ -366,6 +368,7 @@ def supprimer_fiche(idfich):
         update_result = mongo.db.patients.update_one(
             {"_id": fiche['IDPatient']},
             {"$pull": {"fiches": idfich}}
+          #pull 3kss push et aussi we have pop tht helps deleting the first or the last element in an array
         )
 
         if update_result.modified_count == 0:
@@ -405,6 +408,7 @@ def create_session():
         print("Contenu de effetsSignales:", data.get('effetsSignales'))
         session = SessionModel(**data)
         print(data)
+      #deobbogageee les requeste json recus to know if les champs ont le bon types
 
         
         rendezVous_list = []
@@ -496,7 +500,7 @@ def update_session(session_id):
 
         # ----- Rendez vous -----
         if "rendezVous" in data:
-            mongo.db.rendezvous.delete_many({"_id": {"$in": [ObjectId(rdv["_id"]) for rdv in session.get("rendezVous", [])]}})
+            mongo.db.rendezvous.delete_many({"_id": {"$in": [ObjectId(rdv["_id"]) for rdv in session.get("rendezVous", [])]}})#
             new_rendezVous = []
             for date in data["rendezVous"]:
                 rdv_id = mongo.db.rendezvous.insert_one({"date": date}).inserted_id
