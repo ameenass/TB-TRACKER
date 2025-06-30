@@ -126,34 +126,34 @@ def get_patients():
 @app.route('/patients/<IDPatient>', methods=['GET'])
 def get_patient(IDPatient):
     try:
-        print(f"🔍 Looking for patient with IDPatient: {IDPatient}")
+        print(f" Looking for patient with IDPatient: {IDPatient}")
         
         # First try to find by IDPatient field
         patient = patients_collection.find_one({'IDPatient': IDPatient})
-        print(f"🔍 Search by IDPatient field result: {patient is not None}")
+        print(f" Search by IDPatient field result: {patient is not None}")
         
         # If not found, try to find by _id (in case ObjectId is passed)
         if not patient:
             try:
                 if ObjectId.is_valid(IDPatient):
-                    print(f"🔍 Trying search by ObjectId: {IDPatient}")
+                    print(f" Trying search by ObjectId: {IDPatient}")
                     patient = patients_collection.find_one({'_id': ObjectId(IDPatient)})
-                    print(f"🔍 Search by ObjectId result: {patient is not None}")
+                    print(f" Search by ObjectId result: {patient is not None}")
             except Exception as e:
-                print(f"⚠️ Error trying ObjectId search: {e}")
+                print(f" Error trying ObjectId search: {e}")
         
         if not patient:
-            print(f"❌ Patient not found with IDPatient: {IDPatient}")
+            print(f" Patient not found with IDPatient: {IDPatient}")
             # Let's also check what patients exist in the database
             all_patients = list(patients_collection.find({}, {'IDPatient': 1, 'nom': 1, 'prenom': 1}))
-            print(f"📋 Available patients in database: {all_patients}")
+            print(f" Available patients in database: {all_patients}")
             return jsonify({'error': "Patient non trouvé"}), 404
 
         patient['_id'] = str(patient['_id'])  
-        print(f"✅ Patient found: {patient.get('nom', 'N/A')} {patient.get('prenom', 'N/A')}")
+        print(f" Patient found: {patient.get('nom', 'N/A')} {patient.get('prenom', 'N/A')}")
         return jsonify(patient)
     except Exception as e:
-        print(f"❌ Error in get_patient: {e}")
+        print(f" Error in get_patient: {e}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -271,33 +271,7 @@ def login_medecin():
 
 
 
-# @app.route('/login', methods=['POST'])
-# def login_medecin():
-#     try:
-#         data = request.get_json()
-#         nom = data.get('nom')
-#         password = data.get('mot_de_passe')
 
-#         if not nom or not password:
-#             return jsonify({'error': "Nom et mot de passe requis"}), 400
-
-#         medecin = medecins_collection.find_one({"nom": nom})
-#         if not medecin:
-#             return jsonify({'error': "Médecin non trouvé"}), 404
-
-#         if not check_password_hash(medecin['mot_de_passe'], password):
-#             return jsonify({'error': "Mot de passe incorrect"}), 401
-
-#         access_token = create_access_token(identity=nom) #le nom est encodé --> pour connaitre a les prochaines cnx l'identite de medecin
-
-#         return jsonify({
-#             'msg': "Connexion réussie!",
-#             'token': access_token, #contient le nom encodé
-#             'nomMedecin': nom
-#         }), 200
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
     
 
 @app.route('/patients/<IDPatient>', methods=['DELETE'])
@@ -340,7 +314,7 @@ def ajouter_fiche():
         
         #  Mise à jour du patient avec l'ObjectId
         update_result = mongo.db.patients.update_one(
-            {"_id": fiche.IDPatient},  # 👈 on utilise _id ici, pas "IDPatient"
+            {"_id": fiche.IDPatient},  #  on utilise _id ici, pas "IDPatient"
             {"$push": {"fiches": fiche.idfich}}
         )
 
@@ -442,32 +416,7 @@ def create_session():
                 "date": date  
         })
                
-        # print("Consultations recues:", session.consultationsControle)
-
-       
-        # consultation_ids = []
-        # for consultation in session.effetsSignales:
-        #     effets_ids = []
-
-        #     for effet in consultation.effetsSignales or []:
-        #         effet_doc = effet.model_dump()
-        #         effet_insert = mongo.db.effets_signales.insert_one(effet_doc)
-        #         effets_ids.append(str(effet_insert.inserted_id))
-
-        #     consultation_doc = {
-        #         "dateVisite": consultation.dateVisite.isoformat(),
-        #         "effetsSignales": effets_ids
-        #     }
-        #     consult_insert = mongo.db.consultations.insert_one(consultation_doc)
-        #     consultation_ids.append(str(consult_insert.inserted_id))
-        #     # print("Ids des consultations :", consultation_ids)
-
-        # effets_ids = []
-        # if session.effetsSignales:
-        #     for effet in session.effetsSignales:
-        #         effet_doc = effet.model_dump()
-        #         effet_insert = mongo.db.effets_signales.insert_one(effet_doc)
-        #         effets_ids.append(str(effet_insert.inserted_id))
+        
 
         effets_signales_list = []
         if session.effetsSignales:
@@ -519,15 +468,15 @@ def cloturer_session(session_id):
 @app.route("/sessions/fiche/<string:idfich>", methods=["GET"])
 def get_sessions_by_fiche(idfich):
     try:
-        print(f"🔍 Searching for sessions with idfich: {idfich}")
+        print(f"Searching for sessions with idfich: {idfich}")
         sessions = list(mongo.db.sessions.find({"idfich": idfich}))
-        print(f"📊 Found {len(sessions)} sessions")
+        print(f" Found {len(sessions)} sessions")
         for s in sessions:
             print(f"   Session: {s['_id']} - Status: {s.get('statut', 'N/A')}")
             s["_id"] = str(s["_id"])  # Convertir ObjectId pour JSON
         return jsonify(sessions), 200
     except Exception as e:
-        print(f"❌ Error in get_sessions_by_fiche: {e}")
+        print(f" Error in get_sessions_by_fiche: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -599,7 +548,7 @@ def get_fiche(idfich):
         print(f" Looking for fiche with idfich: {idfich}")
         fiche = ficheTraitement.find_one({'idfich': idfich})
         if not fiche:
-            print(f"❌ Fiche not found with idfich: {idfich}")
+            print(f" Fiche not found with idfich: {idfich}")
             return jsonify({'error': "Fiche non trouvée"}), 404
 
         print(f" Fiche found: {fiche.get('idfich', 'N/A')}")
